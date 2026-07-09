@@ -5,10 +5,76 @@ import { supabase } from '../supabaseClient'
 
 const BlogPost = () => {
   const { id } = useParams()
-  const [currentLang, setCurrentLang] = useState('mr')
   const [post, setPost] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+
+  // Helper function to safely extract image URL from various formats
+  const getImageUrl = (post) => {
+    let imageUrl = post.image_url || post.image
+    
+    // If it's an object, try to extract URL from it
+    if (typeof imageUrl === 'object' && imageUrl !== null) {
+      imageUrl = imageUrl.url || imageUrl.src || JSON.stringify(imageUrl)
+    }
+    
+    // If it's a string, convert Unsplash URLs
+    if (typeof imageUrl === 'string') {
+      return convertUnsplashUrl(imageUrl)
+    }
+    
+    return imageUrl
+  }
+
+  // Helper function to safely extract language-specific text
+  const getLocalizedText = (value, lang) => {
+    if (!value) return ''
+    
+    // If it's a string, check if it's a JSON string
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value)
+        if (typeof parsed === 'object' && parsed !== null) {
+          return parsed[lang] || parsed['mr'] || parsed['en'] || value
+        }
+      } catch (e) {
+        // Not a JSON string, return as-is
+        return value
+      }
+      return value
+    }
+    
+    // If it's an object, extract the language-specific value
+    if (typeof value === 'object' && value !== null) {
+      return value[lang] || value['mr'] || value['en'] || ''
+    }
+    
+    // Fallback to string representation
+    return String(value)
+  }
+
+  // Helper function to convert Unsplash page URL to direct image URL
+  const convertUnsplashUrl = (url) => {
+    if (!url || typeof url !== 'string') return 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800'
+    
+    // Trim whitespace
+    url = url.trim()
+    
+    // If it's already a direct image URL (ends with image extension or has query params), return as-is
+    if (url.match(/\.(jpg|jpeg|png|webp|gif)(\?.*)?$/i) || url.includes('images.unsplash.com')) {
+      return url
+    }
+    
+    // If it's an Unsplash page URL, try to extract the photo ID and construct direct URL
+    const match = url.match(/photos\/.*-([A-Za-z0-9_-]+)$/) || url.match(/photos\/([A-Za-z0-9_-]+)/)
+    const id = match ? match[1] : null
+    if (id) {
+      return `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=800&q=80`
+    }
+    
+    // Return original URL if no conversion needed
+    return url
+  }
 
   // Fetch post from Supabase on mount
   useEffect(() => {
@@ -48,51 +114,16 @@ const BlogPost = () => {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#022c22] to-[#0f172a] flex items-center justify-center">
         <div className="text-center">
-          {/* Language Switcher */}
-          <div className="mb-8 flex justify-center">
-            <div className="bg-white/10 backdrop-blur-sm border border-white/30 rounded-full p-1 flex gap-2 inline-flex">
-              <button
-                onClick={() => setCurrentLang('en')}
-                className={`px-4 py-1.5 rounded-full transition-all duration-200 ${
-                  currentLang === 'en' 
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold shadow-md' 
-                    : 'text-white/60 hover:text-white font-semibold transition-colors duration-200'
-                }`}
-              >
-                EN
-              </button>
-              <button
-                onClick={() => setCurrentLang('mr')}
-                className={`px-4 py-1.5 rounded-full transition-all duration-200 ${
-                  currentLang === 'mr' 
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold shadow-md' 
-                    : 'text-white/60 hover:text-white font-semibold transition-colors duration-200'
-                }`}
-              >
-                मराठी
-              </button>
-              <button
-                onClick={() => setCurrentLang('hi')}
-                className={`px-4 py-1.5 rounded-full transition-all duration-200 ${
-                  currentLang === 'hi' 
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold shadow-md' 
-                    : 'text-white/60 hover:text-white font-semibold transition-colors duration-200'
-                }`}
-              >
-                हिंदी
-              </button>
-            </div>
-          </div>
-          <h1 className="text-2xl font-bold text-white mb-4">
-            {currentLang === 'en' ? 'Post Not Found' : currentLang === 'mr' ? 'लेख सापडला नाही' : 'पोस्ट नहीं मिली'}
-          </h1>
+          <h1 className="text-2xl font-bold text-white mb-4">Post Not Found</h1>
           <Link to="/blog" className="text-emerald-300 hover:text-emerald-200">
-            {currentLang === 'en' ? 'Back to Blog' : currentLang === 'mr' ? 'ब्लॉगवर परत जा' : 'ब्लॉग पर वापस जाएं'}
+            Back to Blog
           </Link>
         </div>
       </div>
     )
   }
+
+  const postLang = post.language || 'en';
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#022c22] to-[#0f172a] text-white">
@@ -103,9 +134,12 @@ const BlogPost = () => {
       {/* Header Image */}
       <div className="relative h-96">
         <img 
-          src={post.image} 
-          alt={post.title}
+          src={getImageUrl(post)}
+          alt={getLocalizedText(post.title, postLang)}
           className="w-full h-full object-cover"
+          onError={(e) => {
+            e.target.src = 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800';
+          }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#022c22] to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-8">
@@ -115,13 +149,13 @@ const BlogPost = () => {
               className="inline-flex items-center text-white hover:text-emerald-300 transition-colors mb-4 hover:translate-x-1"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              {currentLang === 'en' ? 'Back to Blog' : currentLang === 'mr' ? 'ब्लॉगवर परत जा' : 'ब्लॉग पर वापस जाएं'}
+              Back to Blog
             </Link>
             <span className="bg-gradient-to-r from-emerald-400 to-emerald-600 text-white px-3 py-1 rounded-full text-sm font-semibold inline-block mb-4">
-              {typeof post.category === 'object' ? (post.category[currentLang] || post.category['mr'] || post.category['en']) : post.category}
+              {post.category}
             </span>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 drop-shadow-lg">
-              {typeof post.title === 'object' ? (post.title[currentLang] || post.title['mr'] || post.title['en']) : post.title}
+              {getLocalizedText(post.title, postLang)}
             </h1>
           </div>
         </div>
@@ -129,41 +163,6 @@ const BlogPost = () => {
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
-        {/* Language Switcher */}
-        <div className="mb-8 flex justify-center">
-          <div className="bg-white/10 backdrop-blur-sm border border-white/30 rounded-full p-1 flex gap-2 inline-flex">
-            <button
-              onClick={() => setCurrentLang('en')}
-              className={`px-4 py-1.5 rounded-full transition-all duration-200 ${
-                currentLang === 'en' 
-                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold shadow-md' 
-                  : 'text-white/60 hover:text-white font-semibold transition-colors duration-200'
-              }`}
-            >
-              EN
-            </button>
-            <button
-              onClick={() => setCurrentLang('mr')}
-              className={`px-4 py-1.5 rounded-full transition-all duration-200 ${
-                currentLang === 'mr' 
-                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold shadow-md' 
-                  : 'text-white/60 hover:text-white font-semibold transition-colors duration-200'
-              }`}
-            >
-              मराठी
-            </button>
-            <button
-              onClick={() => setCurrentLang('hi')}
-              className={`px-4 py-1.5 rounded-full transition-all duration-200 ${
-                currentLang === 'hi' 
-                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold shadow-md' 
-                  : 'text-white/60 hover:text-white font-semibold transition-colors duration-200'
-              }`}
-            >
-              हिंदी
-            </button>
-          </div>
-        </div>
         {/* Meta Information */}
         <div className="flex flex-wrap items-center gap-4 text-gray-300 mb-8 pb-8 border-b border-white/10">
           <div className="flex items-center">
@@ -201,22 +200,22 @@ const BlogPost = () => {
         </div>
 
         {/* Article Content */}
-        <article 
-          className="prose prose-lg max-w-none prose-headings:text-white prose-p:text-gray-300 prose-strong:text-emerald-300 prose-a:text-emerald-400 prose-ul:text-gray-300"
-          dangerouslySetInnerHTML={{ __html: typeof post.content === 'object' ? (post.content[currentLang] || post.content['mr'] || post.content['en']) : post.content }}
+        <div 
+          className="whitespace-pre-line text-slate-300 leading-relaxed"
+          dangerouslySetInnerHTML={{ __html: getLocalizedText(post.content, postLang) }}
         />
 
         {/* Affiliate CTA Section */}
         <div className="mt-12 mb-8">
           <div className="bg-gradient-to-r from-emerald-500/20 to-amber-500/20 backdrop-blur-md border border-white/10 rounded-2xl p-8 text-center">
             <h3 className="text-2xl font-bold text-white mb-4">
-              {currentLang === 'en' ? 'Buy Recommended Products' : currentLang === 'mr' ? 'शिफारस केलेले उत्पादन खरेदी करा' : 'अनुशंसित उत्पाद खरीदें'}
+              Buy Recommended Products
             </h3>
             <p className="text-gray-300 mb-6">
-              {currentLang === 'en' ? 'Check out our curated selection of products that align with the principles discussed in this article.' : currentLang === 'mr' ? 'या लेखात चर्चा केलेल्या तत्त्वांशी जुळणाऱ्या उत्पादनांची आमची निवड केलेली निवड तपासा.' : 'इस लेख में चर्चा किए गए सिद्धांतों के अनुरूप उत्पादों की हमारी चयनित श्रृंखला देखें.'}
+              Check out our curated selection of products that align with the principles discussed in this article.
             </p>
             <button className="bg-gradient-to-r from-emerald-400 to-emerald-600 hover:from-emerald-500 hover:to-emerald-700 text-white px-8 py-4 rounded-2xl font-semibold transition-all duration-300 ease-out hover:-translate-y-1 hover:scale-105 shadow-lg shadow-emerald-500/40 hover:shadow-2xl hover:shadow-emerald-500/60">
-              {currentLang === 'en' ? 'See Advisor Picks' : currentLang === 'mr' ? 'सल्लागारांची निवड पहा' : 'सलाहकार की पिक्स देखें'}
+              See Advisor Picks
             </button>
           </div>
         </div>
@@ -224,7 +223,7 @@ const BlogPost = () => {
         {/* Related Posts */}
         <div className="mt-12 pt-8 border-t border-white/10">
           <h2 className="text-2xl font-bold text-white mb-6">
-            {currentLang === 'en' ? 'Related Posts' : currentLang === 'mr' ? 'संबंधित लेख' : 'संबंधित पोस्ट'}
+            Related Posts
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
@@ -232,7 +231,7 @@ const BlogPost = () => {
                 <h3 className="font-semibold text-white mb-2">Related Post Title {i}</h3>
                 <p className="text-sm text-gray-300 mb-3">Brief description of related post content goes here.</p>
                 <Link to="/blog" className="text-emerald-400 text-sm font-semibold hover:text-emerald-300 hover:translate-x-1 inline-block">
-                  {currentLang === 'en' ? 'Read More' : currentLang === 'mr' ? 'अधिक वाचा' : 'और पढ़ें'} →
+                  Read More →
                 </Link>
               </div>
             ))}
