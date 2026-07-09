@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { Calendar, Clock, ArrowLeft, Share2, Tag, Heart } from 'lucide-react'
+import { Link, useParams, useNavigate } from 'react-router-dom'
+import { Calendar, Clock, ArrowLeft, Share2, Tag, Heart, Edit2 } from 'lucide-react'
 import { supabase } from '../supabaseClient'
+import { isAdmin } from '../utils/adminAuth'
 
 const BlogPost = () => {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [post, setPost] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [isUserAdmin, setIsUserAdmin] = useState(isAdmin())
 
   // Helper function to safely extract image URL from various formats
   const getImageUrl = (post) => {
@@ -97,6 +100,21 @@ const BlogPost = () => {
     fetchPost()
   }, [id])
 
+  // Update admin status when localStorage changes
+  useEffect(() => {
+    const checkAdminStatus = () => {
+      setIsUserAdmin(isAdmin())
+    }
+    
+    window.addEventListener('storage', checkAdminStatus)
+    return () => window.removeEventListener('storage', checkAdminStatus)
+  }, [])
+
+  // Handle edit button click
+  const handleEditClick = () => {
+    navigate('/blog', { state: { editPostId: id } })
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#022c22] to-[#0f172a] flex items-center justify-center">
@@ -174,6 +192,15 @@ const BlogPost = () => {
             <span>{post.read_time || post.readTime}</span>
           </div>
           <div className="flex items-center ml-auto">
+            {isUserAdmin && (
+              <button 
+                onClick={handleEditClick}
+                className="flex items-center text-gray-300 hover:text-blue-400 transition-colors hover:scale-110 mr-4"
+              >
+                <Edit2 className="h-5 w-5 mr-2" />
+                Edit
+              </button>
+            )}
             <button className="flex items-center text-gray-300 hover:text-emerald-400 transition-colors hover:scale-110">
               <Heart className="h-5 w-5 mr-2" />
               Save

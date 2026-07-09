@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { Calendar, Clock, ArrowRight, Plus, Trash2, X, Loader2 } from 'lucide-react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { Calendar, Clock, ArrowRight, Plus, Trash2, X, Loader2, Shield, Edit2 } from 'lucide-react'
 import { supabase } from '../supabaseClient'
+import { isAdmin, adminLogout } from '../utils/adminAuth'
 
 const Blog = () => {
+  const navigate = useNavigate()
+  const location = useLocation()
   const [showAdminForm, setShowAdminForm] = useState(false)
   const [posts, setPosts] = useState([])
   const [filterLang, setFilterLang] = useState('all')
+  const [isUserAdmin, setIsUserAdmin] = useState(isAdmin())
+  const [editingPost, setEditingPost] = useState(null)
 
   const categoryOptions = ['Good Thoughts', 'Health & Ayurveda', 'Motivation']
 
@@ -122,6 +127,71 @@ const Blog = () => {
     fetchPosts()
   }, [])
 
+  // Update admin status when localStorage changes
+  useEffect(() => {
+    const checkAdminStatus = () => {
+      setIsUserAdmin(isAdmin())
+    }
+    
+    window.addEventListener('storage', checkAdminStatus)
+    return () => window.removeEventListener('storage', checkAdminStatus)
+  }, [])
+
+  // Handle edit from BlogPost page
+  useEffect(() => {
+    const state = location?.state
+    if (state?.editPostId) {
+      const postToEdit = posts.find(p => p.id === state.editPostId)
+      if (postToEdit && isUserAdmin) {
+        handleEditPost(postToEdit)
+        // Clear the state to prevent re-triggering
+        navigate(location.pathname, { replace: true, state: {} })
+      }
+    }
+  }, [posts, isUserAdmin, location, navigate])
+
+  // Handle admin logout
+  const handleLogout = () => {
+    adminLogout()
+    setIsUserAdmin(false)
+    setShowAdminForm(false)
+    setEditingPost(null)
+  }
+
+  // Handle edit mode
+  const handleEditPost = (post) => {
+    // Route protection: Check if user is admin
+    if (!isUserAdmin) {
+      alert('Access denied. Only admins can edit blog posts.')
+      navigate('/admin-login')
+      return
+    }
+    
+    setEditingPost(post)
+    setShowAdminForm(true)
+    
+    // Parse the post data to populate the form
+    const title = typeof post.title === 'string' ? JSON.parse(post.title) : post.title
+    const excerpt = typeof post.excerpt === 'string' ? JSON.parse(post.excerpt) : post.excerpt
+    const content = typeof post.content === 'string' ? JSON.parse(post.content) : post.content
+    
+    setNewPost({
+      titleEn: title.en || '',
+      titleMr: title.mr || '',
+      titleHi: title.hi || '',
+      excerptEn: excerpt.en || '',
+      excerptMr: excerpt.mr || '',
+      excerptHi: excerpt.hi || '',
+      contentEn: content.en || '',
+      contentMr: content.mr || '',
+      contentHi: content.hi || '',
+      image: post.image_url || post.image || '',
+      category: post.category || 'Good Thoughts',
+      readTime: post.read_time || post.readTime || '',
+      language: post.language || 'en'
+    })
+  }
+
   // Form state for new blog post with manual multi-language inputs
   const [newPost, setNewPost] = useState({
     titleEn: '',
@@ -146,13 +216,23 @@ const Blog = () => {
     return new Date().toLocaleDateString('en-US', options)
   }
 
-  // Handle adding a new blog post to Supabase with manual multi-language inputs
+  // Handle adding a new blog post or updating an existing one
   const handleAddPost = async (e) => {
     e.preventDefault()
+    
+    // Route protection: Check if user is admin
+    if (!isUserAdmin) {
+      alert('Access denied. Only admins can create or edit blog posts.')
+      setShowAdminForm(false)
+      setEditingPost(null)
+      return
+    }
+    
     setIsSubmitting(true)
 
     console.log('=== Starting blog submission ===')
     console.log('Form data:', newPost)
+    console.log('Edit mode:', !!editingPost)
 
     try {
       // Map manual inputs directly to database structure
@@ -165,28 +245,41 @@ const Blog = () => {
         image_url: convertUnsplashUrl(image),
         category: category,
         read_time: readTime,
-        date: new Date().toLocaleDateString(),
         language: language
       }
 
       console.log('Payload to be sent to Supabase:', JSON.stringify(payload, null, 2))
 
-      const { data, error } = await supabase
-        .from('blogs')
-        .insert([payload])
-        .select()
+      let result
+      if (editingPost) {
+        // Update existing post
+        result = await supabase
+          .from('blogs')
+          .update(payload)
+          .eq('id', editingPost.id)
+          .select()
+      } else {
+        // Insert new post
+        payload.date = new Date().toLocaleDateString()
+        result = await supabase
+          .from('blogs')
+          .insert([payload])
+          .select()
+      }
+
+      const { data, error } = result
 
       if (error) {
-        console.error('=== Supabase insert error ===')
+        console.error('=== Supabase error ===')
         console.error('Error details:', error)
         console.error('Error message:', error.message)
         console.error('Error code:', error.code)
         console.error('Error details:', error.details)
         console.error('Error hint:', error.hint)
-        alert(`Failed to add blog post: ${error.message}`)
+        alert(`Failed to ${editingPost ? 'update' : 'add'} blog post: ${error.message}`)
       } else {
-        console.log('=== Blog post added successfully ===')
-        console.log('Inserted data:', data)
+        console.log(`=== Blog post ${editingPost ? 'updated' : 'added'} successfully ===`)
+        console.log('Data:', data)
 
         // Refresh posts from Supabase
         const { data: refreshedData, error: refreshError } = await supabase
@@ -218,14 +311,15 @@ const Blog = () => {
           language: 'en'
         })
         setShowAdminForm(false)
-        alert('Blog post published successfully!')
+        setEditingPost(null)
+        alert(`Blog post ${editingPost ? 'updated' : 'published'} successfully!`)
       }
     } catch (error) {
       console.error('=== Unexpected error in handleAddPost ===')
       console.error('Error:', error)
       console.error('Error message:', error.message)
       console.error('Error stack:', error.stack)
-      alert(`Failed to add blog post: ${error.message}`)
+      alert(`Failed to ${editingPost ? 'update' : 'add'} blog post: ${error.message}`)
     } finally {
       setIsSubmitting(false)
       console.log('=== Blog submission process completed ===')
@@ -322,30 +416,49 @@ const Blog = () => {
 
         {/* Admin Toggle Button */}
         <div className="mb-8 flex gap-3">
-          <button
-            onClick={() => setShowAdminForm(!showAdminForm)}
-            className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-5 py-3 rounded-2xl font-semibold transition-all duration-500 ease-out hover:-translate-y-1 hover:scale-105 shadow-lg shadow-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-500/50"
-          >
-            {showAdminForm ? (
-              <>
-                <X className="h-5 w-5" />
-                Close Admin Panel
-              </>
-            ) : (
-              <>
-                <span className="text-lg">✨</span>
-                Write New Blog
-              </>
-            )}
-          </button>
+          {isUserAdmin ? (
+            <>
+              <button
+                onClick={() => setShowAdminForm(!showAdminForm)}
+                className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-5 py-3 rounded-2xl font-semibold transition-all duration-500 ease-out hover:-translate-y-1 hover:scale-105 shadow-lg shadow-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-500/50"
+              >
+                {showAdminForm ? (
+                  <>
+                    <X className="h-5 w-5" />
+                    Close Admin Panel
+                  </>
+                ) : (
+                  <>
+                    <span className="text-lg">✨</span>
+                    Write New Blog
+                  </>
+                )}
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-5 py-3 rounded-2xl font-semibold transition-all duration-500 ease-out hover:-translate-y-1 hover:scale-105 shadow-lg shadow-red-500/30 hover:shadow-2xl hover:shadow-red-500/50"
+              >
+                <Shield className="h-5 w-5" />
+                Logout
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => navigate('/admin-login')}
+              className="flex items-center gap-2 bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white px-5 py-3 rounded-2xl font-semibold transition-all duration-500 ease-out hover:-translate-y-1 hover:scale-105 shadow-lg shadow-slate-500/30 hover:shadow-2xl hover:shadow-slate-500/50"
+            >
+              <Shield className="h-5 w-5" />
+              Admin Login
+            </button>
+          )}
         </div>
 
         {/* Admin Form */}
-        {showAdminForm && (
+        {showAdminForm && isUserAdmin && (
           <div className="glassmorphism rounded-3xl shadow-xl p-8 mb-12 animate-slide-down">
             <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3">
               <span className="text-2xl">✨</span>
-              Write New Blog Post
+              {editingPost ? 'Edit Blog Post' : 'Write New Blog Post'}
             </h2>
             <form onSubmit={handleAddPost} className="space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -535,18 +648,21 @@ const Blog = () => {
                   {isSubmitting ? (
                     <>
                       <Loader2 className="h-5 w-5 animate-spin" />
-                      Publishing...
+                      {editingPost ? 'Updating...' : 'Publishing...'}
                     </>
                   ) : (
                     <>
                       <Plus className="h-5 w-5" />
-                      Publish Blog
+                      {editingPost ? 'Update Blog' : 'Publish Blog'}
                     </>
                   )}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowAdminForm(false)}
+                  onClick={() => {
+                    setShowAdminForm(false)
+                    setEditingPost(null)
+                  }}
                   className="glassmorphism text-slate-700 px-8 py-3 rounded-2xl font-semibold transition-all duration-500 ease-out hover:-translate-y-1 hover:scale-105 shadow-md hover:shadow-xl hover:shadow-emerald-200/50"
                 >
                   Cancel
@@ -589,13 +705,24 @@ const Blog = () => {
                         {postLang === 'en' ? '🇬🇧 EN' : postLang === 'mr' ? '🇮🇳 मराठी' : '🇮🇳 हिंदी'}
                       </span>
                     </div>
-                    <button
-                      onClick={() => handleDeletePost(post.id)}
-                      className="absolute top-4 right-4 bg-red-500/90 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition-all duration-300 z-20 backdrop-blur-sm hover:scale-110"
-                      title="Delete blog post"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    {isUserAdmin && (
+                      <div className="absolute top-4 right-4 flex gap-2 z-20">
+                        <button
+                          onClick={() => handleEditPost(post)}
+                          className="bg-blue-500/90 hover:bg-blue-600 text-white p-2 rounded-full shadow-md transition-all duration-300 backdrop-blur-sm hover:scale-110"
+                          title="Edit blog post"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeletePost(post.id)}
+                          className="bg-red-500/90 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition-all duration-300 backdrop-blur-sm hover:scale-110"
+                          title="Delete blog post"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="p-6">
