@@ -12,8 +12,18 @@ const Blog = () => {
   const [filterLang, setFilterLang] = useState('all')
   const [isUserAdmin, setIsUserAdmin] = useState(isAdmin())
   const [editingPost, setEditingPost] = useState(null)
+  const [selectedDate, setSelectedDate] = useState(null)
+  const [filterType, setFilterType] = useState('all')
 
-  const categoryOptions = ['Good Thoughts', 'Health & Ayurveda', 'Motivation']
+  const categoryOptions = [
+    'Good Thoughts',
+    'Health & Ayurveda', 
+    'Motivation',
+    'निसर्ग / Nature',
+    'जीवनशैली / Lifestyle',
+    'अध्यात्म / Spirituality',
+    'विचार / Thoughts'
+  ]
 
   // Helper function to safely extract language-specific value
   const getLocalizedValue = (value, lang) => {
@@ -107,6 +117,69 @@ const Blog = () => {
     
     // Return original URL if no conversion needed
     return url
+  }
+
+  // Helper function to get today's date in the same format as stored in database
+  const getTodayDate = () => {
+    return new Date().toLocaleDateString()
+  }
+
+  // Helper function to get yesterday's date in the same format as stored in database
+  const getYesterdayDate = () => {
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    return yesterday.toLocaleDateString()
+  }
+
+  // Helper function to format date for date input (YYYY-MM-DD)
+  const formatDateForInput = (date) => {
+    const d = new Date(date)
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
+  // Helper function to convert date input to locale date format
+  const convertInputDateToLocale = (dateString) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString()
+  }
+
+  // Filter posts based on date
+  const filterPostsByDate = (posts) => {
+    if (filterType === 'all') {
+      return posts
+    }
+    
+    if (filterType === 'today') {
+      const today = getTodayDate()
+      return posts.filter(post => post.date === today)
+    }
+    
+    if (filterType === 'yesterday') {
+      const yesterday = getYesterdayDate()
+      return posts.filter(post => post.date === yesterday)
+    }
+    
+    if (filterType === 'custom' && selectedDate) {
+      const customDate = convertInputDateToLocale(selectedDate)
+      return posts.filter(post => post.date === customDate)
+    }
+    
+    return posts
+  }
+
+  // Handle date filter change
+  const handleDateFilterChange = (type, date = null) => {
+    setFilterType(type)
+    setSelectedDate(date)
+  }
+
+  // Reset date filter
+  const resetDateFilter = () => {
+    setFilterType('all')
+    setSelectedDate(null)
   }
 
   // Fetch posts from Supabase on mount
@@ -216,6 +289,60 @@ const Blog = () => {
     return new Date().toLocaleDateString('en-US', options)
   }
 
+  // Handle image upload to Supabase Storage
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size must be less than 5MB')
+      return
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file')
+      return
+    }
+
+    try {
+      setIsSubmitting(true)
+      
+      // Generate unique file path
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`
+      const filePath = `blog-images/${fileName}`
+
+      // Upload to Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('blog-images')
+        .upload(filePath, file)
+
+      if (uploadError) {
+        console.error('Error uploading image:', uploadError)
+        alert('Failed to upload image. Please try again.')
+        setIsSubmitting(false)
+        return
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('blog-images')
+        .getPublicUrl(filePath)
+
+      // Update form state with the public URL
+      setNewPost({ ...newPost, image: publicUrl })
+      
+      console.log('Image uploaded successfully:', publicUrl)
+      setIsSubmitting(false)
+    } catch (error) {
+      console.error('Error in image upload:', error)
+      alert('Failed to upload image. Please try again.')
+      setIsSubmitting(false)
+    }
+  }
+
   // Handle adding a new blog post or updating an existing one
   const handleAddPost = async (e) => {
     e.preventDefault()
@@ -242,7 +369,7 @@ const Blog = () => {
         title: { en: titleEn, mr: titleMr, hi: titleHi },
         excerpt: { en: excerptEn, mr: excerptMr, hi: excerptHi },
         content: { en: contentEn, mr: contentMr, hi: contentHi },
-        image_url: convertUnsplashUrl(image),
+        image_url: image, // Use the image URL directly (already from Supabase Storage or converted URL)
         category: category,
         read_time: readTime,
         language: language
@@ -411,6 +538,85 @@ const Blog = () => {
             >
               🇮🇳 हिंदी
             </button>
+          </div>
+        </div>
+
+        {/* Date Filter Sidebar */}
+        <div className="mb-8">
+          <div className="glassmorphism rounded-3xl shadow-lg p-6">
+            <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-emerald-600" />
+              तारखेनुसार ब्लॉग फिल्टर करा
+            </h3>
+            
+            {/* Quick Action Buttons */}
+            <div className="flex flex-wrap gap-3 mb-4">
+              <button
+                onClick={() => handleDateFilterChange('all')}
+                className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                  filterType === 'all'
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                सर्व ब्लॉग
+              </button>
+              <button
+                onClick={() => handleDateFilterChange('today')}
+                className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                  filterType === 'today'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                आजचे ब्लॉग
+              </button>
+              <button
+                onClick={() => handleDateFilterChange('yesterday')}
+                className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                  filterType === 'yesterday'
+                    ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-md'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                कालचे ब्लॉग
+              </button>
+            </div>
+
+            {/* Custom Date Picker */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  किंवा विशिष्ट तारखा निवडा
+                </label>
+                <input
+                  type="date"
+                  value={selectedDate || ''}
+                  onChange={(e) => handleDateFilterChange('custom', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300 bg-white"
+                />
+              </div>
+              {filterType !== 'all' && (
+                <button
+                  onClick={resetDateFilter}
+                  className="mt-6 px-4 py-3 bg-red-100 hover:bg-red-200 text-red-700 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2"
+                >
+                  <X className="h-4 w-4" />
+                  Reset
+                </button>
+              )}
+            </div>
+
+            {/* Current Filter Status */}
+            {filterType !== 'all' && (
+              <div className="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                <p className="text-sm text-emerald-700 font-medium">
+                  {filterType === 'today' && `📅 आजचे ब्लॉग: ${getTodayDate()}`}
+                  {filterType === 'yesterday' && `📅 कालचे ब्लॉग: ${getYesterdayDate()}`}
+                  {filterType === 'custom' && selectedDate && `📅 निवडलेली तारखा: ${convertInputDateToLocale(selectedDate)}`}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -603,16 +809,64 @@ const Blog = () => {
                     </div>
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Image URL (फोटोची लिंक)</label>
-                  <input
-                    type="url"
-                    required
-                    value={newPost.image}
-                    onChange={(e) => setNewPost({...newPost, image: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300"
-                    placeholder="https://example.com/image.jpg"
-                  />
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Blog Image (ब्लॉग फोटो)</label>
+                  
+                  {/* Image Upload Section */}
+                  <div className="space-y-4">
+                    {/* File Upload */}
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          disabled={isSubmitting}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+                        />
+                      </div>
+                      {isSubmitting && (
+                        <div className="flex items-center gap-2 text-emerald-600">
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                          <span className="text-sm">Uploading...</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Image Preview */}
+                    {newPost.image && (
+                      <div className="relative">
+                        <img
+                          src={newPost.image}
+                          alt="Preview"
+                          className="w-full h-48 object-cover rounded-2xl border border-gray-200"
+                          onError={(e) => {
+                            e.target.src = 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800';
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setNewPost({ ...newPost, image: '' })}
+                          className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition-all duration-300"
+                          title="Remove image"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Fallback URL Input */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-slate-500">Or paste URL:</span>
+                      <input
+                        type="url"
+                        value={newPost.image}
+                        onChange={(e) => setNewPost({ ...newPost, image: e.target.value })}
+                        className="flex-1 px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300 text-sm"
+                        placeholder="https://example.com/image.jpg"
+                      />
+                    </div>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">Category</label>
@@ -673,7 +927,7 @@ const Blog = () => {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {posts
+          {filterPostsByDate(posts)
             .filter(post => filterLang === 'all' || post.language === filterLang)
             .map((post) => {
               const postLang = post.language || 'en';
@@ -756,15 +1010,29 @@ const Blog = () => {
             })}
         </div>
 
-        {posts.length === 0 && (
+        {filterPostsByDate(posts).filter(post => filterLang === 'all' || post.language === filterLang).length === 0 && (
           <div className="text-center py-20">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full mb-6">
-              <span className="text-4xl">📝</span>
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-amber-100 to-orange-100 rounded-full mb-6">
+              <span className="text-4xl">�</span>
             </div>
-            <p className="text-2xl font-bold text-emerald-600 mb-3">अजून एकही ब्लॉग उपलब्ध नाही</p>
-            <p className="text-lg text-white font-medium bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-3 rounded-full inline-block shadow-lg">
-              नवीन ब्लॉग जोडण्यासाठी 'Write New Blog' वर क्लिक करा!
-            </p>
+            {filterType !== 'all' ? (
+              <>
+                <p className="text-2xl font-bold text-amber-600 mb-3">या तारखेचा एकही ब्लॉग अजून उपलब्ध नाही!</p>
+                <button
+                  onClick={resetDateFilter}
+                  className="text-lg text-white font-medium bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-3 rounded-full inline-block shadow-lg hover:from-emerald-600 hover:to-teal-700 transition-all duration-300"
+                >
+                  सर्व ब्लॉग पाहा
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-2xl font-bold text-emerald-600 mb-3">अजून एकही ब्लॉग उपलब्ध नाही</p>
+                <p className="text-lg text-white font-medium bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-3 rounded-full inline-block shadow-lg">
+                  नवीन ब्लॉग जोडण्यासाठी 'Write New Blog' वर क्लिक करा!
+                </p>
+              </>
+            )}
           </div>
         )}
       </div>
