@@ -487,6 +487,86 @@ const Blog = () => {
     }
   }
 
+  // Handle password change
+  const handlePasswordChange = async (e) => {
+    e.preventDefault()
+    setPasswordError('')
+    setPasswordSuccess('')
+    setIsUpdatingPassword(true)
+
+    try {
+      // Validate inputs
+      if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+        setPasswordError('All fields are required')
+        setIsUpdatingPassword(false)
+        return
+      }
+
+      if (passwordData.newPassword !== passwordData.confirmPassword) {
+        setPasswordError('New password and confirm password do not match')
+        setIsUpdatingPassword(false)
+        return
+      }
+
+      if (passwordData.newPassword.length < 6) {
+        setPasswordError('New password must be at least 6 characters long')
+        setIsUpdatingPassword(false)
+        return
+      }
+
+      // Fetch current password from database
+      const { data: currentData, error: fetchError } = await supabase
+        .from('admin_settings')
+        .select('password')
+        .eq('id', 1)
+        .single()
+
+      if (fetchError) {
+        setPasswordError('Failed to verify current password. Please try again.')
+        setIsUpdatingPassword(false)
+        return
+      }
+
+      // Verify current password
+      if (passwordData.currentPassword !== currentData.password) {
+        setPasswordError('Current password is incorrect')
+        setIsUpdatingPassword(false)
+        return
+      }
+
+      // Update password in database
+      const { error: updateError } = await supabase
+        .from('admin_settings')
+        .update({ password: passwordData.newPassword })
+        .eq('id', 1)
+
+      if (updateError) {
+        setPasswordError('Failed to update password. Please try again.')
+        setIsUpdatingPassword(false)
+        return
+      }
+
+      setPasswordSuccess('Password updated successfully!')
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      })
+      setShowPasswordForm(false)
+
+      // Auto logout after password change for security
+      setTimeout(() => {
+        handleLogout()
+      }, 2000)
+
+    } catch (error) {
+      console.error('Error changing password:', error)
+      setPasswordError('An unexpected error occurred. Please try again.')
+    } finally {
+      setIsUpdatingPassword(false)
+    }
+  }
+
   return (
     <div className="min-h-screen">
       {/* Header Section */}
@@ -648,6 +728,13 @@ const Blog = () => {
                     Write New Blog
                   </>
                 )}
+              </button>
+              <button
+                onClick={() => setShowPasswordForm(!showPasswordForm)}
+                className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-5 py-3 rounded-2xl font-semibold transition-all duration-500 ease-out hover:-translate-y-1 hover:scale-105 shadow-lg shadow-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/50"
+              >
+                <Lock className="h-5 w-5" />
+                Change Password
               </button>
               <button
                 onClick={handleLogout}
@@ -927,6 +1014,107 @@ const Blog = () => {
                     setEditingPost(null)
                   }}
                   className="glassmorphism text-slate-700 px-8 py-3 rounded-2xl font-semibold transition-all duration-500 ease-out hover:-translate-y-1 hover:scale-105 shadow-md hover:shadow-xl hover:shadow-emerald-200/50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Change Password Form */}
+        {showPasswordForm && isUserAdmin && (
+          <div className="glassmorphism rounded-3xl shadow-xl p-8 mb-12 animate-slide-down">
+            <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+              <Lock className="h-6 w-6 text-blue-600" />
+              Change Admin Password
+            </h2>
+            <form onSubmit={handlePasswordChange} className="space-y-5">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  value={passwordData.currentPassword}
+                  onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
+                  placeholder="Enter current password"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  value={passwordData.newPassword}
+                  onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
+                  placeholder="Enter new password (min 6 characters)"
+                  required
+                  minLength={6}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
+                  placeholder="Confirm new password"
+                  required
+                  minLength={6}
+                />
+              </div>
+
+              {passwordError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl text-sm">
+                  {passwordError}
+                </div>
+              )}
+
+              {passwordSuccess && (
+                <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-2xl text-sm">
+                  {passwordSuccess}
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={isUpdatingPassword}
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-8 py-3 rounded-2xl font-semibold transition-all duration-500 ease-out hover:-translate-y-1 hover:scale-105 shadow-lg shadow-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/50 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:scale-100"
+                >
+                  {isUpdatingPassword ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="h-5 w-5" />
+                      Change Password
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPasswordForm(false)
+                    setPasswordData({
+                      currentPassword: '',
+                      newPassword: '',
+                      confirmPassword: ''
+                    })
+                    setPasswordError('')
+                    setPasswordSuccess('')
+                  }}
+                  className="glassmorphism text-slate-700 px-8 py-3 rounded-2xl font-semibold transition-all duration-500 ease-out hover:-translate-y-1 hover:scale-105 shadow-md hover:shadow-xl hover:shadow-blue-200/50"
                 >
                   Cancel
                 </button>

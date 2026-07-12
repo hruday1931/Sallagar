@@ -1,62 +1,45 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Lock, Shield } from 'lucide-react'
-import { adminLogin } from '../utils/adminAuth'
 import { supabase } from '../supabaseClient'
 
 const AdminLogin = () => {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [dbPassword, setDbPassword] = useState(null)
   const navigate = useNavigate()
-
-  // Fetch admin password from Supabase on component mount
-  useEffect(() => {
-    const fetchAdminPassword = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('admin_settings')
-          .select('password')
-          .eq('id', 1)
-          .single()
-        
-        if (error) {
-          console.error('Error fetching admin password:', error)
-          // Fallback to environment variable if database fetch fails
-          setDbPassword(import.meta.env.VITE_ADMIN_PASSWORD || 'admin123')
-        } else {
-          setDbPassword(data.password)
-        }
-      } catch (err) {
-        console.error('Unexpected error fetching admin password:', err)
-        setDbPassword(import.meta.env.VITE_ADMIN_PASSWORD || 'admin123')
-      }
-    }
-
-    fetchAdminPassword()
-  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
 
-    // Simulate a small delay for better UX
-    await new Promise(resolve => setTimeout(resolve, 500))
+    try {
+      const { data, error } = await supabase
+        .from('admin_settings')
+        .select('admin_password')
+        .eq('id', 'config')
+        .single();
 
-    // Use the database password if available, otherwise fallback to environment variable
-    const adminPassword = dbPassword || import.meta.env.VITE_ADMIN_PASSWORD || 'admin123'
-    const success = adminLogin(password, adminPassword)
-
-    if (success) {
-      navigate('/blog')
-    } else {
-      setError('Invalid password. Please try again.')
-      setPassword('')
+      if (!error && data) {
+        if (password === data.admin_password) {
+          localStorage.setItem('is_admin', 'true');
+          alert("Login Successful! 🔓");
+          window.location.href = '/categories';
+        } else {
+          setError("Invalid password. Please try again.");
+          setPassword('');
+        }
+      } else {
+        console.error("Supabase connection error:", error);
+        setError("Database connection failed. Check your network.");
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
   return (
