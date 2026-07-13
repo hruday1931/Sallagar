@@ -6,7 +6,10 @@
  * @returns {boolean} - True if user is admin, false otherwise
  */
 export const isAdmin = () => {
-  return localStorage.getItem('is_admin') === 'true';
+  const token = localStorage.getItem('is_admin');
+  // Strict check: only true if token is exactly the string 'true'
+  // This prevents null, undefined, 'null', or any other value from being truthy
+  return token === 'true';
 };
 
 /**

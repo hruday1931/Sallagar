@@ -11,6 +11,13 @@ const Header = () => {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [clickCount, setClickCount] = useState(0)
+  const [isAdmin, setIsAdmin] = useState(() => {
+    const token = localStorage.getItem('is_admin');
+    // Strict check: only true if token is exactly the string 'true'
+    // This prevents null, undefined, 'null', or any other value from being truthy
+    return token === 'true';
+  })
 
   const handleSearch = (e) => {
     e.preventDefault()
@@ -42,6 +49,7 @@ const Header = () => {
       if (!error && data) {
         if (password === data.admin_password) {
           localStorage.setItem('is_admin', 'true');
+          setIsAdmin(true);
           setIsModalOpen(false);
           setPassword('');
           window.location.href = '/blog';
@@ -60,6 +68,34 @@ const Header = () => {
       setLoading(false)
     }
   }
+
+  const handleAdminClick = () => {
+    setClickCount(prev => {
+      const newCount = prev + 1;
+      if (newCount === 5) {
+        setIsModalOpen(true);
+        return 0;
+      }
+      return newCount;
+    });
+
+    clearTimeout(window.clickResetTimeout);
+    window.clickResetTimeout = setTimeout(() => {
+      setClickCount(0);
+    }, 2000);
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('is_admin');
+    localStorage.clear();
+    sessionStorage.clear();
+    setIsAdmin(false);
+    setIsModalOpen(false);
+    // Force a hard reload to the home page to destroy any remaining React states
+    window.location.replace('/');
+  }
+
+  const isAdminLoggedIn = isAdmin;
   return (
     <header className="sticky top-0 z-50 backdrop-blur-xl bg-gradient-to-r from-emerald-900 via-slate-900 to-teal-900 border-b border-white/10 shadow-lg shadow-emerald-500/20 transition-all duration-500 hover:shadow-xl hover:shadow-emerald-500/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -134,8 +170,8 @@ const Header = () => {
                 <Search className="h-5 w-5" />
               </button>
             </div>
-            <button 
-              onClick={() => setIsModalOpen(true)}
+            <button
+              onClick={handleAdminClick}
               className="p-2.5 text-white hover:text-amber-400 hover:bg-white/10 rounded-full transition-all duration-200 hover:scale-110 shadow-sm hover:shadow-white/20"
               title="Admin Login"
             >
@@ -152,67 +188,98 @@ const Header = () => {
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4 animate-in fade-in zoom-in duration-200">
-            <div className="text-center mb-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full mb-4">
-                <Shield className="h-8 w-8 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-2">Admin Login</h2>
-              <p className="text-slate-600">Enter your password to access admin features</p>
-            </div>
-
-            <form onSubmit={handlePasswordSubmit} className="space-y-4">
-              <div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300"
-                    placeholder="Enter admin password"
-                    required
-                    autoFocus
-                  />
+            {isAdminLoggedIn ? (
+              <>
+                <div className="text-center mb-6">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full mb-4">
+                    <Shield className="h-8 w-8 text-white" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-slate-900 mb-2">Admin Logged In</h2>
+                  <p className="text-slate-600">You are currently logged in as admin</p>
                 </div>
-              </div>
 
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
-                  {error}
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-3 rounded-xl font-semibold transition-all duration-200"
+                  >
+                    Close
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-3 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2"
+                  >
+                    <Shield className="h-5 w-5" />
+                    Logout
+                  </button>
                 </div>
-              )}
+              </>
+            ) : (
+              <>
+                <div className="text-center mb-6">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full mb-4">
+                    <Shield className="h-8 w-8 text-white" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-slate-900 mb-2">Admin Login</h2>
+                  <p className="text-slate-600">Enter your password to access admin features</p>
+                </div>
 
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsModalOpen(false)
-                    setPassword('')
-                    setError('')
-                  }}
-                  className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-3 rounded-xl font-semibold transition-all duration-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-4 py-3 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <>
-                      <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      Verifying...
-                    </>
-                  ) : (
-                    <>
-                      <Shield className="h-5 w-5" />
-                      Login
-                    </>
+                <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                  <div>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300"
+                        placeholder="Enter admin password"
+                        required
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                      {error}
+                    </div>
                   )}
-                </button>
-              </div>
-            </form>
+
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsModalOpen(false)
+                        setPassword('')
+                        setError('')
+                      }}
+                      className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-3 rounded-xl font-semibold transition-all duration-200"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-4 py-3 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? (
+                        <>
+                          <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          Verifying...
+                        </>
+                      ) : (
+                        <>
+                          <Shield className="h-5 w-5" />
+                          Login
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
           </div>
         </div>
       )}

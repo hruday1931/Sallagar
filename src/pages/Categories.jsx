@@ -9,7 +9,12 @@ const Categories = () => {
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [showAdminForm, setShowAdminForm] = useState(false)
   const [products, setProducts] = useState([])
-  const [isUserAdmin, setIsUserAdmin] = useState(isAdmin())
+  const [isUserAdmin, setIsUserAdmin] = useState(() => {
+    const token = localStorage.getItem('is_admin');
+    // Strict check: only true if token is exactly the string 'true'
+    // This prevents null, undefined, 'null', or any other value from being truthy
+    return token === 'true';
+  })
   const [editingProduct, setEditingProduct] = useState(null)
   const [showProductDetails, setShowProductDetails] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState(null)
@@ -45,10 +50,6 @@ const Categories = () => {
 
   // Check admin status on mount
   useEffect(() => {
-    // Development bypass: set admin to true on localhost
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      localStorage.setItem('is_admin', 'true')
-    }
     setIsUserAdmin(isAdmin())
   }, [])
 
@@ -339,7 +340,7 @@ const Categories = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         {/* Admin Toggle Button */}
         <div className="mb-8 flex gap-3">
-          {isUserAdmin ? (
+          {isUserAdmin && (
             <>
               <button
                 onClick={() => {
@@ -371,22 +372,7 @@ const Categories = () => {
                   </>
                 )}
               </button>
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-5 py-3 rounded-2xl font-semibold transition-all duration-500 ease-out hover:-translate-y-1 hover:scale-105 shadow-lg shadow-red-500/30 hover:shadow-2xl hover:shadow-red-500/50"
-              >
-                <Shield className="h-5 w-5" />
-                Logout
-              </button>
             </>
-          ) : (
-            <button
-              onClick={() => window.location.href = '/admin-login'}
-              className="flex items-center gap-2 bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white px-5 py-3 rounded-2xl font-semibold transition-all duration-500 ease-out hover:-translate-y-1 hover:scale-105 shadow-lg shadow-slate-500/30 hover:shadow-2xl hover:shadow-slate-500/50"
-            >
-              <Shield className="h-5 w-5" />
-              Admin Login
-            </button>
           )}
         </div>
 

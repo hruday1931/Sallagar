@@ -12,7 +12,12 @@ const Blog = () => {
   const [showAdminForm, setShowAdminForm] = useState(false)
   const [posts, setPosts] = useState([])
   const [filterLang, setFilterLang] = useState('all')
-  const [isUserAdmin, setIsUserAdmin] = useState(isAdmin())
+  const [isUserAdmin, setIsUserAdmin] = useState(() => {
+    const token = localStorage.getItem('is_admin');
+    // Strict check: only true if token is exactly the string 'true'
+    // This prevents null, undefined, 'null', or any other value from being truthy
+    return token === 'true';
+  })
   const [editingPost, setEditingPost] = useState(null)
   const [selectedDate, setSelectedDate] = useState(null)
   const [filterType, setFilterType] = useState('all')
@@ -234,13 +239,6 @@ const Blog = () => {
     window.addEventListener('storage', checkAdminStatus)
     return () => window.removeEventListener('storage', checkAdminStatus)
   }, [])
-
-  // Route protection: Redirect to home if not admin
-  useEffect(() => {
-    if (!isAdmin()) {
-      navigate('/')
-    }
-  }, [navigate])
 
   // Handle edit from BlogPost page
   useEffect(() => {
@@ -738,7 +736,7 @@ const Blog = () => {
 
         {/* Admin Toggle Button */}
         <div className="mb-8 flex gap-3">
-          {isUserAdmin ? (
+          {isUserAdmin && (
             <>
               <button
                 onClick={() => setShowAdminForm(!showAdminForm)}
@@ -763,22 +761,7 @@ const Blog = () => {
                 <Lock className="h-5 w-5" />
                 Change Password
               </button>
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-5 py-3 rounded-2xl font-semibold transition-all duration-500 ease-out hover:-translate-y-1 hover:scale-105 shadow-lg shadow-red-500/30 hover:shadow-2xl hover:shadow-red-500/50"
-              >
-                <Shield className="h-5 w-5" />
-                Logout
-              </button>
             </>
-          ) : (
-            <button
-              onClick={() => navigate('/admin-login')}
-              className="flex items-center gap-2 bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white px-5 py-3 rounded-2xl font-semibold transition-all duration-500 ease-out hover:-translate-y-1 hover:scale-105 shadow-lg shadow-slate-500/30 hover:shadow-2xl hover:shadow-slate-500/50"
-            >
-              <Shield className="h-5 w-5" />
-              Admin Login
-            </button>
           )}
         </div>
 

@@ -12,7 +12,12 @@ const BlogPost = () => {
   const [post, setPost] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [isUserAdmin, setIsUserAdmin] = useState(isAdmin())
+  const [isUserAdmin, setIsUserAdmin] = useState(() => {
+    const token = localStorage.getItem('is_admin');
+    // Strict check: only true if token is exactly the string 'true'
+    // This prevents null, undefined, 'null', or any other value from being truthy
+    return token === 'true';
+  })
 
   // Helper function to safely extract image URL from various formats
   const getImageUrl = (post) => {
