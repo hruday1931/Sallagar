@@ -332,7 +332,7 @@ const BlogPost = () => {
                     {/* Product Image */}
                     <div className="relative h-48 overflow-hidden">
                       <img 
-                        src={product.imageUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400'}
+                        src={product.image || product.imageUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400'}
                         alt={product.name}
                         className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
                         onError={(e) => {
@@ -348,7 +348,7 @@ const BlogPost = () => {
                       </h4>
                       
                       <a 
-                        href={product.affiliateLink}
+                        href={product.link || product.affiliateLink}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center justify-center w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-4 py-3 rounded-xl font-semibold transition-all duration-300 ease-out hover:-translate-y-1 hover:scale-105 shadow-lg shadow-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-500/50"

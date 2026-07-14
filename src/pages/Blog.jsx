@@ -239,11 +239,15 @@ const Blog = () => {
       readTime: post.read_time || post.readTime || '',
       language: post.language || 'en',
       hasAffiliate: post.has_affiliate || false,
-      recommendedProducts: post.recommended_products || [
-        { name: '', imageUrl: '', affiliateLink: '' },
-        { name: '', imageUrl: '', affiliateLink: '' },
-        { name: '', imageUrl: '', affiliateLink: '' }
-      ]
+      recommendedProducts: (post.recommended_products || []).map(p => ({
+        name: p.name || '',
+        image: p.image || p.imageUrl || '',
+        link: p.link || p.affiliateLink || ''
+      })).concat(
+        (post.recommended_products || []).length < 3 
+          ? Array(3 - (post.recommended_products || []).length).fill({ name: '', image: '', link: '' })
+          : []
+      )
     })
   }
 
@@ -264,12 +268,13 @@ const Blog = () => {
     language: 'en',
     hasAffiliate: false,
     recommendedProducts: [
-      { name: '', imageUrl: '', affiliateLink: '' },
-      { name: '', imageUrl: '', affiliateLink: '' },
-      { name: '', imageUrl: '', affiliateLink: '' }
+      { name: '', image: '', link: '' },
+      { name: '', image: '', link: '' },
+      { name: '', image: '', link: '' }
     ]
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [uploadingProductIndex, setUploadingProductIndex] = useState(null)
 
   // Helper function to format current date
   const getCurrentDate = () => {
@@ -334,6 +339,65 @@ const Blog = () => {
     }
   }
 
+  // Handle product image upload to Supabase Storage
+  const handleProductImageUpload = async (e, index) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size must be less than 5MB')
+      return
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file')
+      return
+    }
+
+    try {
+      setUploadingProductIndex(index)
+      
+      // Generate unique file path
+      const fileExt = file.name.split('.').pop()
+      const fileName = `product-${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`
+      const filePath = fileName
+
+      // Upload to Supabase Storage with options
+      const { data, error: uploadError } = await supabase.storage
+        .from('blog-images')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        })
+
+      if (uploadError) {
+        console.error("Supabase Storage Error Details:", uploadError)
+        alert(`Upload Failed: ${uploadError.message || JSON.stringify(uploadError)}`)
+        setUploadingProductIndex(null)
+        return
+      }
+      
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('blog-images')
+        .getPublicUrl(filePath)
+
+      // Update form state with the public URL
+      const updatedProducts = [...newPost.recommendedProducts]
+      updatedProducts[index].image = publicUrl
+      setNewPost({ ...newPost, recommendedProducts: updatedProducts })
+      
+      console.log('Product image uploaded successfully:', publicUrl)
+      setUploadingProductIndex(null)
+    } catch (err) {
+      console.error("General Upload Catch Block Error:", err)
+      alert(`Error: ${err.message || err}`)
+      setUploadingProductIndex(null)
+    }
+  }
+
   // Handle adding a new blog post or updating an existing one
   const handleAddPost = async (e) => {
     e.preventDefault()
@@ -356,8 +420,14 @@ const Blog = () => {
       // Map manual inputs directly to database structure
       const { titleEn, titleMr, titleHi, excerptEn, excerptMr, excerptHi, contentEn, contentMr, contentHi, image, category, readTime, language, hasAffiliate, recommendedProducts } = newPost
       
-      // Filter out empty products
-      const validProducts = recommendedProducts.filter(p => p.name && p.imageUrl && p.affiliateLink)
+      // Filter out empty products and map to correct field names
+      const validProducts = recommendedProducts
+        .filter(p => p.name && p.image && p.link)
+        .map(p => ({
+          name: p.name,
+          image: p.image,
+          link: p.link
+        }))
       
       const payload = {
         title: { en: titleEn, mr: titleMr, hi: titleHi },
@@ -434,9 +504,9 @@ const Blog = () => {
           language: 'en',
           hasAffiliate: false,
           recommendedProducts: [
-            { name: '', imageUrl: '', affiliateLink: '' },
-            { name: '', imageUrl: '', affiliateLink: '' },
-            { name: '', imageUrl: '', affiliateLink: '' }
+            { name: '', image: '', link: '' },
+            { name: '', image: '', link: '' },
+            { name: '', image: '', link: '' }
           ]
         })
         setShowAdminForm(false)
@@ -1001,27 +1071,41 @@ const Blog = () => {
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Product Image URL</label>
-                            <input
-                              type="url"
-                              value={product.imageUrl}
-                              onChange={(e) => {
-                                const updatedProducts = [...newPost.recommendedProducts]
-                                updatedProducts[index].imageUrl = e.target.value
-                                setNewPost({ ...newPost, recommendedProducts: updatedProducts })
-                              }}
-                              className="w-full px-4 py-2 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 dark:focus:border-emerald-400 transition-all duration-300 text-slate-900 dark:text-slate-100"
-                              placeholder="https://example.com/product.jpg"
-                            />
+                            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Product Image</label>
+                            <div className="space-y-2">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleProductImageUpload(e, index)}
+                                disabled={uploadingProductIndex === index}
+                                className="w-full px-4 py-2 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 dark:focus:border-emerald-400 transition-all duration-300 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 dark:file:bg-emerald-900/30 file:text-emerald-700 dark:file:text-emerald-300 hover:file:bg-emerald-100 dark:hover:file:bg-emerald-900/50 text-slate-900 dark:text-slate-100"
+                              />
+                              {uploadingProductIndex === index && (
+                                <div className="flex items-center gap-2 text-emerald-600 text-sm">
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                  <span>Uploading...</span>
+                                </div>
+                              )}
+                              {product.image && (
+                                <img
+                                  src={product.image}
+                                  alt="Product preview"
+                                  className="w-full h-20 object-cover rounded-lg border border-gray-200"
+                                  onError={(e) => {
+                                    e.target.style.display = 'none'
+                                  }}
+                                />
+                              )}
+                            </div>
                           </div>
                           <div>
                             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Affiliate Link</label>
                             <input
                               type="url"
-                              value={product.affiliateLink}
+                              value={product.link}
                               onChange={(e) => {
                                 const updatedProducts = [...newPost.recommendedProducts]
-                                updatedProducts[index].affiliateLink = e.target.value
+                                updatedProducts[index].link = e.target.value
                                 setNewPost({ ...newPost, recommendedProducts: updatedProducts })
                               }}
                               className="w-full px-4 py-2 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 dark:focus:border-emerald-400 transition-all duration-300 text-slate-900 dark:text-slate-100"
