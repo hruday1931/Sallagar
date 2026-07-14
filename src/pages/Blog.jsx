@@ -33,12 +33,9 @@ const Blog = () => {
 
   const categoryOptions = [
     'Good Thoughts',
-    'Health & Ayurveda', 
-    'Motivation',
-    'निसर्ग / Nature',
-    'जीवनशैली / Lifestyle',
-    'अध्यात्म / Spirituality',
-    'विचार / Thoughts'
+    'Fitness',
+    'Health & Ayurveda',
+    'Motivation'
   ]
 
   // Helper function to safely extract language-specific value
@@ -151,11 +148,12 @@ const Blog = () => {
 
   // Filter posts based on category and search query
   const filteredBlogs = posts.filter(blog => {
-    const matchesCategory = activeCategory === 'All' || blog.category?.toLowerCase() === activeCategory.toLowerCase();
+    const matchesCategory = activeCategory === 'All' || blog.category === activeCategory;
+    const matchesLanguage = filterLang === 'all' || blog.language === filterLang;
     const titleText = (blog.title?.en || blog.title?.mr || blog.title?.hi || "").toLowerCase();
     const contentText = (blog.content?.en || blog.content?.mr || blog.content?.hi || "").toLowerCase();
     const matchesSearch = titleText.includes(searchQuery.toLowerCase()) || contentText.includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    return matchesCategory && matchesLanguage && matchesSearch;
   });
 
   // Fetch posts from Supabase on mount
@@ -734,24 +732,24 @@ const Blog = () => {
                 Good Thoughts
               </button>
               <button
-                onClick={() => setActiveCategory('Health')}
+                onClick={() => setActiveCategory('Fitness')}
                 className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-200 ${
-                  activeCategory === 'Health'
+                  activeCategory === 'Fitness'
                     ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
                     : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600'
                 }`}
               >
-                Health
+                Fitness
               </button>
               <button
-                onClick={() => setActiveCategory('Ayurveda')}
+                onClick={() => setActiveCategory('Health & Ayurveda')}
                 className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-200 ${
-                  activeCategory === 'Ayurveda'
+                  activeCategory === 'Health & Ayurveda'
                     ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md'
                     : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600'
                 }`}
               >
-                Ayurveda
+                Health & Ayurveda
               </button>
               <button
                 onClick={() => setActiveCategory('Motivation')}
@@ -1253,9 +1251,7 @@ const Blog = () => {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredBlogs
-            .filter(post => filterLang === 'all' || post.language === filterLang)
-            .map((post) => {
+          {filteredBlogs.map((post) => {
               const postLang = post.language || 'en';
               return (
                 <article key={post.id} className="glassmorphism dark:bg-slate-800 rounded-3xl shadow-md overflow-hidden hover:shadow-2xl hover:shadow-emerald-200/50 transition-all duration-500 ease-out hover:-translate-y-3 hover:scale-[1.02]">
@@ -1271,9 +1267,11 @@ const Blog = () => {
                     />
                     <div className="absolute top-4 left-4 flex gap-2 z-20">
                       <span className={`px-4 py-2 rounded-full text-xs font-semibold backdrop-blur-sm ${
-                        post.category === 'Good Thoughts' || post.category === 'चांगले विचार' || post.category === 'अच्छे विचार' ? 'bg-purple-100/80 text-purple-700' :
-                        post.category === 'Health & Ayurveda' || post.category === 'आरोग्य आणि आयुर्वेद' || post.category === 'स्वास्थ्य और आयुर्वेद' ? 'bg-emerald-100/80 text-emerald-700' :
-                        'bg-orange-100/80 text-orange-700'
+                        post.category === 'Good Thoughts' ? 'bg-purple-100/80 text-purple-700' :
+                        post.category === 'Fitness' ? 'bg-blue-100/80 text-blue-700' :
+                        post.category === 'Health & Ayurveda' ? 'bg-emerald-100/80 text-emerald-700' :
+                        post.category === 'Motivation' ? 'bg-orange-100/80 text-orange-700' :
+                        'bg-slate-100/80 text-slate-700'
                       }`}>
                         {post.category}
                       </span>
@@ -1349,7 +1347,7 @@ const Blog = () => {
             })}
         </div>
 
-        {filteredBlogs.filter(post => filterLang === 'all' || post.language === filterLang).length === 0 && (
+        {filteredBlogs.length === 0 && (
           <div className="text-center py-20">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-amber-100 to-orange-100 rounded-full mb-6">
               <span className="text-4xl">📝</span>
