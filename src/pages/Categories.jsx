@@ -564,7 +564,7 @@ const Categories = () => {
                 <img 
                   src={product.image_url || product.image} 
                   alt={product.title}
-                  className="w-full h-48 object-cover"
+                  className="w-full h-56 object-contain bg-slate-900/20 dark:bg-slate-700/30"
                 />
                 <div className="absolute top-4 left-4 flex gap-2 z-20">
                   {product.discount_percent && product.discount_percent > 0 && (
@@ -654,7 +654,7 @@ const Categories = () => {
               <img 
                 src={selectedProduct.image_url || selectedProduct.image} 
                 alt={selectedProduct.title}
-                className="w-full h-64 md:h-80 object-cover rounded-t-3xl"
+                className="w-full h-64 md:h-80 object-contain bg-slate-900/20 dark:bg-slate-700/30 rounded-t-3xl"
               />
             </div>
             <div className="p-8">
