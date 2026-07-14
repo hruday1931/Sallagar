@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, Menu, Sparkles, X, Lock, Shield } from 'lucide-react'
+import { Search, Menu, Sparkles, X, Lock, Shield, Sun, Moon } from 'lucide-react'
 import { supabase } from '../supabaseClient'
+import { useDarkMode } from '../contexts/DarkModeContext'
 
 const Header = () => {
   const navigate = useNavigate()
+  const { isDarkMode, toggleDarkMode } = useDarkMode()
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -170,6 +172,13 @@ const Header = () => {
                 <Search className="h-5 w-5" />
               </button>
             </div>
+            <button
+              onClick={toggleDarkMode}
+              className="p-2.5 text-white hover:text-amber-400 hover:bg-white/10 rounded-full transition-all duration-200 hover:scale-110 shadow-sm hover:shadow-white/20"
+              title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
             <button
               onClick={handleAdminClick}
               className="p-2.5 text-white hover:text-amber-400 hover:bg-white/10 rounded-full transition-all duration-200 hover:scale-110 shadow-sm hover:shadow-white/20"

@@ -80,7 +80,7 @@ const Hero = () => {
 
           {/* Tagline */}
           <p className="text-2xl sm:text-3xl text-emerald-300 mb-6 max-w-3xl mx-auto font-light">
-            Changle Vichar, Health, Ayurveda, ani Motivation
+            Good Thoughts, Health, Ayurveda, ani Motivation
           </p>
 
           {/* Subheading */}

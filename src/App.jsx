@@ -12,29 +12,32 @@ import Contact from './pages/Contact'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import TermsOfService from './pages/TermsOfService'
 import Disclaimer from './pages/Disclaimer'
+import { DarkModeProvider } from './contexts/DarkModeContext'
 
 function App() {
   return (
-    <Router>
-      <div className="min-h-screen flex flex-col bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-50 via-teal-50 to-purple-50 animate-gradient">
-        <Header />
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Hero />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:id" element={<BlogPost />} />
-            <Route path="/admin-login" element={<AdminLogin />} />
-            <Route path="/categories" element={<Categories />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/terms" element={<TermsOfService />} />
-            <Route path="/disclaimer" element={<Disclaimer />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-    </Router>
+    <DarkModeProvider>
+      <Router>
+        <div className="min-h-screen flex flex-col bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-50 via-teal-50 to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 animate-gradient transition-colors duration-300">
+          <Header />
+          <main className="flex-grow">
+            <Routes>
+              <Route path="/" element={<Hero />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:id" element={<BlogPost />} />
+              <Route path="/admin-login" element={<AdminLogin />} />
+              <Route path="/categories" element={<Categories />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/disclaimer" element={<Disclaimer />} />
+            </Routes>
+          </main>
+          <Footer />
+        </div>
+      </Router>
+    </DarkModeProvider>
   )
 }
 

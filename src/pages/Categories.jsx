@@ -8,7 +8,8 @@ const Categories = () => {
   const [searchParams] = useSearchParams()
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [showAdminForm, setShowAdminForm] = useState(false)
-  const [products, setProducts] = useState([])
+  const [allProducts, setAllProducts] = useState([])
+  const [loading, setLoading] = useState(true)
   const [isUserAdmin, setIsUserAdmin] = useState(() => {
     const token = localStorage.getItem('is_admin');
     // Strict check: only true if token is exactly the string 'true'
@@ -22,23 +23,30 @@ const Categories = () => {
   const categories = ['All', 'Electronics', 'Home & Kitchen', 'Fashion', 'Health & Wellness', 'Sports & Outdoors']
   const storeOptions = ['Amazon', 'Flipkart', 'Meesho', 'Myntra', 'AJIO']
 
-  // Fetch products from Supabase on mount
+  // Fetch all products from Supabase once on mount
   useEffect(() => {
     const fetchProducts = async () => {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('created_at', { ascending: false })
-      
-      if (error) {
-        console.error('Error fetching products:', error)
-      } else {
-        setProducts(data || [])
+      try {
+        setLoading(true)
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .order('created_at', { ascending: false })
+        
+        if (error) {
+          console.error('Error fetching products:', error)
+        } else {
+          setAllProducts(data || [])
+        }
+      } catch (err) {
+        console.error('Error fetching products:', err)
+      } finally {
+        setLoading(false)
       }
     }
 
     fetchProducts()
-  }, [])
+  }, []) // Run ONLY once on mount
 
   // Set selected category from URL query param on mount
   useEffect(() => {
@@ -205,7 +213,7 @@ const Categories = () => {
       if (refreshError) {
         console.error('Error refreshing products:', refreshError)
       } else if (refreshedData) {
-        setProducts(refreshedData)
+        setAllProducts(refreshedData)
       }
 
       // Reset form
@@ -283,7 +291,7 @@ const Categories = () => {
           .order('created_at', { ascending: false })
         
         if (refreshedData) {
-          setProducts(refreshedData)
+          setAllProducts(refreshedData)
         }
       }
     }
@@ -316,9 +324,11 @@ const Categories = () => {
     return styles[store] || styles.Amazon // Default to Amazon if store not found
   }
 
-  const filteredProducts = selectedCategory === 'All' 
-    ? products 
-    : products.filter(product => product.category === selectedCategory)
+  // Filter instantly in memory for instant category switching
+  const filteredProducts = allProducts.filter(product => {
+    if (selectedCategory === 'All') return true
+    return product.category?.toLowerCase() === selectedCategory.toLowerCase()
+  })
 
   return (
     <div className="min-h-screen">
@@ -386,7 +396,7 @@ const Categories = () => {
             <form onSubmit={handleAddProduct} className="space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Title</label>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Title</label>
                   <input
                     type="text"
                     required
@@ -397,7 +407,7 @@ const Categories = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Product Image</label>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Product Image</label>
                   <input
                     type="file"
                     accept="image/*"
@@ -421,7 +431,7 @@ const Categories = () => {
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Category (optional)</label>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Category (optional)</label>
                   <input
                     type="text"
                     value={newProduct.category}
@@ -437,7 +447,7 @@ const Categories = () => {
                   </datalist>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Store</label>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Store</label>
                   <select
                     required
                     value={newProduct.store}
@@ -450,7 +460,7 @@ const Categories = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Price</label>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Price</label>
                   <input
                     type="text"
                     required
@@ -461,7 +471,7 @@ const Categories = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Affiliate Link</label>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Affiliate Link</label>
                   <input
                     type="url"
                     required
@@ -472,7 +482,7 @@ const Categories = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Discount % (Optional)</label>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Discount % (Optional)</label>
                   <input
                     type="number"
                     min="0"
@@ -485,7 +495,7 @@ const Categories = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Description</label>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Description</label>
                 <textarea
                   required
                   value={newProduct.description}
@@ -532,12 +542,21 @@ const Categories = () => {
           ))}
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="text-center py-20">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
+            <p className="text-slate-600 mt-4 font-medium">Loading products...</p>
+          </div>
+        )}
+
         {/* Products Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredProducts.map((product) => (
+        {!loading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredProducts.map((product) => (
             <div 
               key={product.id}
-              className="glassmorphism rounded-3xl shadow-md overflow-hidden hover:shadow-2xl hover:shadow-emerald-200/50 transition-all duration-500 ease-out hover:-translate-y-3 hover:scale-[1.02] cursor-pointer"
+              className="glassmorphism dark:bg-slate-800 rounded-3xl shadow-md overflow-hidden hover:shadow-2xl hover:shadow-emerald-200/50 transition-all duration-500 ease-out hover:-translate-y-3 hover:scale-[1.02] cursor-pointer"
               onClick={() => handleViewProduct(product)}
             >
               <div className="relative">
@@ -583,12 +602,12 @@ const Categories = () => {
                 )}
               </div>
               
-              <div className="p-5">
-                <h3 className="text-lg font-bold text-slate-900 mb-2 line-clamp-2">
+              <div className="p-5 dark:bg-slate-800">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2 line-clamp-2">
                   {product.title}
                 </h3>
                 
-                <p className="text-slate-600 text-sm mb-3 line-clamp-2">
+                <p className="text-slate-600 dark:text-slate-300 text-sm mb-3 line-clamp-2">
                   {product.description}
                 </p>
                 
@@ -612,10 +631,11 @@ const Categories = () => {
             </div>
           ))}
         </div>
+        )}
 
-        {filteredProducts.length === 0 && (
+        {!loading && filteredProducts.length === 0 && (
           <div className="text-center py-20">
-            <p className="text-slate-500 text-lg font-medium">No products found in this category.</p>
+            <p className="text-slate-500 dark:text-slate-400 text-lg font-medium">No products found in this category.</p>
           </div>
         )}
       </div>
@@ -650,10 +670,10 @@ const Categories = () => {
                   </span>
                 )}
               </div>
-              <h2 className="text-3xl font-bold text-slate-900 mb-4">
+              <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-4">
                 {selectedProduct.title}
               </h2>
-              <p className="text-slate-600 text-lg mb-6 leading-relaxed">
+              <p className="text-slate-600 dark:text-slate-300 text-lg mb-6 leading-relaxed">
                 {selectedProduct.description}
               </p>
               <div className="flex items-center justify-between mb-8">
