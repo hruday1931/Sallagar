@@ -312,18 +312,53 @@ const BlogPost = () => {
         />
 
         {/* Affiliate CTA Section */}
-        {post?.has_affiliate === true && (
+        {post?.has_affiliate === true && post?.recommended_products && post.recommended_products.length > 0 && (
           <div className="mt-12 mb-8">
-            <div className={`${isDarkMode ? 'bg-gradient-to-r from-emerald-500/20 to-amber-500/20 border-white/10' : 'bg-gradient-to-r from-emerald-100 to-amber-100 border-emerald-200'} backdrop-blur-md border rounded-2xl p-8 text-center`}>
-              <h3 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'} mb-4`}>
-                Buy Recommended Products
+            <div className={`${isDarkMode ? 'bg-gradient-to-r from-emerald-500/20 to-amber-500/20 border-white/10' : 'bg-gradient-to-r from-emerald-100 to-amber-100 border-emerald-200'} backdrop-blur-md border rounded-2xl p-8`}>
+              <h3 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'} mb-2 text-center`}>
+                ⚡ Recommended Products for You
               </h3>
-              <p className={isDarkMode ? 'text-gray-300 mb-6' : 'text-slate-600 mb-6'}>
-                Check out our curated selection of products that align with the principles discussed in this article.
+              <p className={`text-center ${isDarkMode ? 'text-gray-300' : 'text-slate-600'} mb-6`}>
+                तुमच्यासाठी शिफारस केलेले प्रोडक्ट्स
               </p>
-              <button className="bg-gradient-to-r from-emerald-400 to-emerald-600 hover:from-emerald-500 hover:to-emerald-700 text-white px-8 py-4 rounded-2xl font-semibold transition-all duration-300 ease-out hover:-translate-y-1 hover:scale-105 shadow-lg shadow-emerald-500/40 hover:shadow-2xl hover:shadow-emerald-500/60">
-                See Advisor Picks
-              </button>
+              
+              {/* Product Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {post.recommended_products.map((product, index) => (
+                  <div 
+                    key={index}
+                    className={`${isDarkMode ? 'bg-white/10 border-white/20 hover:border-emerald-400/50' : 'bg-white border-slate-200 hover:border-emerald-300'} backdrop-blur-md border rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/20 hover:-translate-y-2 hover:scale-[1.02]`}
+                  >
+                    {/* Product Image */}
+                    <div className="relative h-48 overflow-hidden">
+                      <img 
+                        src={product.imageUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400'}
+                        alt={product.name}
+                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+                        onError={(e) => {
+                          e.target.src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400';
+                        }}
+                      />
+                    </div>
+                    
+                    {/* Product Details */}
+                    <div className="p-5">
+                      <h4 className={`font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'} mb-3 line-clamp-2 text-lg`}>
+                        {product.name}
+                      </h4>
+                      
+                      <a 
+                        href={product.affiliateLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-4 py-3 rounded-xl font-semibold transition-all duration-300 ease-out hover:-translate-y-1 hover:scale-105 shadow-lg shadow-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-500/50"
+                      >
+                        Buy Now 🛒
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}

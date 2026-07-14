@@ -238,7 +238,12 @@ const Blog = () => {
       category: post.category || 'Good Thoughts',
       readTime: post.read_time || post.readTime || '',
       language: post.language || 'en',
-      hasAffiliate: post.has_affiliate || false
+      hasAffiliate: post.has_affiliate || false,
+      recommendedProducts: post.recommended_products || [
+        { name: '', imageUrl: '', affiliateLink: '' },
+        { name: '', imageUrl: '', affiliateLink: '' },
+        { name: '', imageUrl: '', affiliateLink: '' }
+      ]
     })
   }
 
@@ -257,7 +262,12 @@ const Blog = () => {
     category: 'Good Thoughts',
     readTime: '',
     language: 'en',
-    hasAffiliate: false
+    hasAffiliate: false,
+    recommendedProducts: [
+      { name: '', imageUrl: '', affiliateLink: '' },
+      { name: '', imageUrl: '', affiliateLink: '' },
+      { name: '', imageUrl: '', affiliateLink: '' }
+    ]
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -344,7 +354,10 @@ const Blog = () => {
 
     try {
       // Map manual inputs directly to database structure
-      const { titleEn, titleMr, titleHi, excerptEn, excerptMr, excerptHi, contentEn, contentMr, contentHi, image, category, readTime, language, hasAffiliate } = newPost
+      const { titleEn, titleMr, titleHi, excerptEn, excerptMr, excerptHi, contentEn, contentMr, contentHi, image, category, readTime, language, hasAffiliate, recommendedProducts } = newPost
+      
+      // Filter out empty products
+      const validProducts = recommendedProducts.filter(p => p.name && p.imageUrl && p.affiliateLink)
       
       const payload = {
         title: { en: titleEn, mr: titleMr, hi: titleHi },
@@ -354,7 +367,8 @@ const Blog = () => {
         category: category,
         read_time: readTime,
         language: language,
-        has_affiliate: hasAffiliate
+        has_affiliate: hasAffiliate,
+        recommended_products: validProducts
       }
 
       console.log('Payload to be sent to Supabase:', JSON.stringify(payload, null, 2))
@@ -418,7 +432,12 @@ const Blog = () => {
           category: 'Good Thoughts',
           readTime: '',
           language: 'en',
-          hasAffiliate: false
+          hasAffiliate: false,
+          recommendedProducts: [
+            { name: '', imageUrl: '', affiliateLink: '' },
+            { name: '', imageUrl: '', affiliateLink: '' },
+            { name: '', imageUrl: '', affiliateLink: '' }
+          ]
         })
         setShowAdminForm(false)
         setEditingPost(null)
@@ -560,7 +579,7 @@ const Blog = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         {/* Language Filter Tabs */}
         <div className="mb-8 flex justify-center">
-          <div className="bg-slate-900/10 dark:bg-slate-700/30 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-full p-1 flex gap-2 inline-flex mx-auto">
+          <div className="bg-slate-900/10 dark:bg-slate-700/30 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-full p-1 inline-flex gap-2 mx-auto">
             <button
               onClick={() => setFilterLang('all')}
               className={`px-4 py-1.5 rounded-full transition-all duration-200 ${
@@ -720,7 +739,7 @@ const Blog = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {/* Language Selector */}
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 text-lg">Primary Language</label>
+                  <label className="block text-lg font-bold text-slate-800 dark:text-slate-200 mb-3">Primary Language</label>
                   <select
                     required
                     value={newPost.language}
@@ -736,7 +755,7 @@ const Blog = () => {
 
                 {/* ENGLISH SECTION */}
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 text-lg flex items-center gap-2">
+                  <label className="flex text-lg font-bold text-slate-800 dark:text-slate-200 mb-3 items-center gap-2">
                     <span className="text-2xl">🇬🇧</span> English Section
                   </label>
                   <div className="space-y-4">
@@ -778,7 +797,7 @@ const Blog = () => {
 
                 {/* MARATHI SECTION */}
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 text-lg flex items-center gap-2">
+                  <label className="flex text-lg font-bold text-slate-800 dark:text-slate-200 mb-3 items-center gap-2">
                     <span className="text-2xl">🇮🇳</span> मराठी विभाग (Marathi Section)
                   </label>
                   <div className="space-y-4">
@@ -820,7 +839,7 @@ const Blog = () => {
 
                 {/* HINDI SECTION */}
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 text-lg flex items-center gap-2">
+                  <label className="flex text-lg font-bold text-slate-800 dark:text-slate-200 mb-3 items-center gap-2">
                     <span className="text-2xl">🇮🇳</span> हिंदी विभाग (Hindi Section)
                   </label>
                   <div className="space-y-4">
@@ -954,6 +973,64 @@ const Blog = () => {
                     <label htmlFor="has_affiliate" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
                       Contains Affiliate Links (Shows Disclosure & Product Banner)
                     </label>
+                  </div>
+                </div>
+
+                {/* Recommended Products Section */}
+                <div className="md:col-span-2">
+                  <label className="flex text-lg font-bold text-slate-800 dark:text-slate-200 mb-3 items-center gap-2">
+                    <span className="text-2xl">🛒</span> Recommended Products (Up to 3)
+                  </label>
+                  <div className="space-y-6">
+                    {newPost.recommendedProducts.map((product, index) => (
+                      <div key={index} className="p-5 border border-gray-200 dark:border-slate-600 rounded-2xl bg-gray-50 dark:bg-slate-700/50">
+                        <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4">Product {index + 1}</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Product Name</label>
+                            <input
+                              type="text"
+                              value={product.name}
+                              onChange={(e) => {
+                                const updatedProducts = [...newPost.recommendedProducts]
+                                updatedProducts[index].name = e.target.value
+                                setNewPost({ ...newPost, recommendedProducts: updatedProducts })
+                              }}
+                              className="w-full px-4 py-2 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 dark:focus:border-emerald-400 transition-all duration-300 text-slate-900 dark:text-slate-100"
+                              placeholder="Product name"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Product Image URL</label>
+                            <input
+                              type="url"
+                              value={product.imageUrl}
+                              onChange={(e) => {
+                                const updatedProducts = [...newPost.recommendedProducts]
+                                updatedProducts[index].imageUrl = e.target.value
+                                setNewPost({ ...newPost, recommendedProducts: updatedProducts })
+                              }}
+                              className="w-full px-4 py-2 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 dark:focus:border-emerald-400 transition-all duration-300 text-slate-900 dark:text-slate-100"
+                              placeholder="https://example.com/product.jpg"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Affiliate Link</label>
+                            <input
+                              type="url"
+                              value={product.affiliateLink}
+                              onChange={(e) => {
+                                const updatedProducts = [...newPost.recommendedProducts]
+                                updatedProducts[index].affiliateLink = e.target.value
+                                setNewPost({ ...newPost, recommendedProducts: updatedProducts })
+                              }}
+                              className="w-full px-4 py-2 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 dark:focus:border-emerald-400 transition-all duration-300 text-slate-900 dark:text-slate-100"
+                              placeholder="https://amazon.com/..."
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
