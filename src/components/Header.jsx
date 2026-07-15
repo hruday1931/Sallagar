@@ -126,7 +126,7 @@ const Header = () => {
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-amber-400 to-yellow-400 group-hover:w-full transition-all duration-300 ease-out rounded-full"></span>
             </Link>
             <Link to="/categories" className="relative text-white hover:text-amber-400 px-5 py-2 rounded-full text-base font-semibold transition-all duration-200 group">
-              <span className="relative z-10">Categories</span>
+              <span className="relative z-10">Product Sell</span>
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-amber-400 to-yellow-400 group-hover:w-full transition-all duration-300 ease-out rounded-full"></span>
             </Link>
             <Link to="/about" className="relative text-white hover:text-amber-400 px-5 py-2 rounded-full text-base font-semibold transition-all duration-200 group">

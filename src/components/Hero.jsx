@@ -91,12 +91,12 @@ const Hero = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-            <Link to="/blog" className="bg-gradient-to-r from-emerald-400 to-emerald-600 hover:from-emerald-500 hover:to-emerald-700 text-white px-8 py-4 rounded-2xl font-semibold transition-all duration-300 ease-out hover:-translate-y-1 hover:scale-105 shadow-lg shadow-emerald-500/40 hover:shadow-2xl hover:shadow-emerald-500/60 flex items-center animate-pulse">
+            <Link to="/blog" className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold px-6 py-3 rounded-xl transition duration-300 shadow-lg shadow-emerald-900/30">
               Explore Blog
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
-            <Link to="/categories" className="bg-white/10 backdrop-blur-md border border-white/30 text-white px-8 py-4 rounded-2xl font-semibold hover:bg-white/20 hover:border-white/50 transition-all duration-300 ease-out hover:-translate-y-1 hover:scale-105 shadow-lg">
-              Browse Categories
+            <Link to="/categories" className="border-2 border-emerald-500/50 hover:border-emerald-500 bg-emerald-950/20 hover:bg-emerald-900/30 text-emerald-300 hover:text-white font-semibold px-6 py-3 rounded-xl transition duration-300">
+              Product Sell
             </Link>
           </div>
 
