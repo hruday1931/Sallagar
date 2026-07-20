@@ -66,6 +66,9 @@ const Hero = () => {
       try {
         setLoading(true)
         
+        let blogsData = []
+        let productsData = []
+        
         // Fetch blogs
         const { data: blogData, error: blogError } = await supabase
           .from('blogs')
@@ -77,7 +80,7 @@ const Hero = () => {
           console.error('Error fetching blogs:', blogError)
           if (isMounted) setBlogs([])
         } else {
-          const blogsData = Array.isArray(blogData) ? blogData : []
+          blogsData = Array.isArray(blogData) ? blogData : []
           if (isMounted) setBlogs(blogsData)
         }
         
@@ -92,7 +95,7 @@ const Hero = () => {
           console.error('Error fetching products:', productError)
           if (isMounted) setProducts([])
         } else {
-          const productsData = Array.isArray(productData) ? productData : []
+          productsData = Array.isArray(productData) ? productData : []
           if (isMounted) setProducts(productsData)
         }
         
