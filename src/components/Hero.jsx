@@ -1,130 +1,317 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Star, Shield, CheckCircle } from 'lucide-react'
+import { ArrowRight, Star, Shield, CheckCircle, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react'
+import { supabase } from '../supabaseClient'
 
 const Hero = () => {
-  return (
-    <>
-      <style>
-        {`
-          @keyframes float-3d-1 {
-            0% { transform: translateY(0px) rotate(0deg) scale(1); }
-            50% { transform: translateY(-25px) rotate(180deg) scale(1.05); }
-            100% { transform: translateY(0px) rotate(360deg) scale(1); }
-          }
-          @keyframes float-3d-2 {
-            0% { transform: translateY(0px) rotate(360deg) scale(1.05); }
-            50% { transform: translateY(25px) rotate(180deg) scale(0.95); }
-            100% { transform: translateY(0px) rotate(0deg) scale(1.05); }
-          }
-          @keyframes float-3d-3 {
-            0% { transform: translateX(0px) translateY(0px) rotate(0deg) scale(1); }
-            25% { transform: translateX(15px) translateY(-20px) rotate(90deg) scale(1.08); }
-            50% { transform: translateX(0px) translateY(-35px) rotate(180deg) scale(1); }
-            75% { transform: translateX(-15px) translateY(-20px) rotate(270deg) scale(1.08); }
-            100% { transform: translateX(0px) translateY(0px) rotate(360deg) scale(1); }
-          }
-          @keyframes float-3d-4 {
-            0% { transform: translateX(0px) translateY(0px) rotate(45deg) scale(0.95); }
-            50% { transform: translateX(-20px) translateY(30px) rotate(225deg) scale(1.1); }
-            100% { transform: translateX(0px) translateY(0px) rotate(405deg) scale(0.95); }
-          }
-        `}
-      </style>
-      <section className="relative overflow-hidden py-16 lg:py-20 bg-gradient-to-r from-[#064e3b] via-[#022c22] to-[#1e3a1e]">
-      {/* Premium Ambient Light Leaks */}
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-amber-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 animate-pulse"></div>
-      <div className="absolute top-0 right-0 w-96 h-96 bg-amber-400/15 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 animate-pulse" style={{animationDelay: '1s'}}></div>
-      
-      {/* 3D Floating Transparent Elements */}
-      {/* Floating Circles */}
-      <div className="absolute top-16 left-[5%] w-16 h-16 bg-gradient-to-br from-emerald-400/30 to-teal-500/30 rounded-full backdrop-blur-sm border border-emerald-300/40 shadow-lg shadow-emerald-400/20" style={{animation: 'float-3d-1 8s ease-in-out infinite'}}></div>
-      <div className="absolute top-32 right-[8%] w-20 h-20 bg-gradient-to-br from-indigo-400/25 to-purple-500/25 rounded-full backdrop-blur-sm border border-indigo-300/40 shadow-lg shadow-indigo-400/20" style={{animation: 'float-3d-2 10s ease-in-out infinite', animationDelay: '1s'}}></div>
-      <div className="absolute bottom-24 left-[12%] w-14 h-14 bg-gradient-to-br from-amber-400/30 to-orange-500/30 rounded-full backdrop-blur-sm border border-amber-300/40 shadow shadow-amber-400/20" style={{animation: 'float-3d-3 9s ease-in-out infinite', animationDelay: '2s'}}></div>
-      <div className="absolute top-[40%] right-[15%] w-12 h-12 bg-gradient-to-br from-pink-400/25 to-rose-500/25 rounded-full backdrop-blur-sm border border-pink-300/40 shadow shadow-pink-400/20" style={{animation: 'float-3d-4 7s ease-in-out infinite', animationDelay: '0.5s'}}></div>
-      
-      {/* Floating Squares */}
-      <div className="absolute top-[15%] left-[20%] w-10 h-10 bg-gradient-to-br from-cyan-400/25 to-blue-500/25 rounded-lg backdrop-blur-sm border border-cyan-300/40 shadow-lg shadow-cyan-400/20" style={{animation: 'float-3d-2 11s ease-in-out infinite', animationDelay: '3s'}}></div>
-      <div className="absolute bottom-[32%] right-[25%] w-8 h-8 bg-gradient-to-br from-violet-400/30 to-purple-500/30 rounded-lg backdrop-blur-sm border border-violet-300/40 shadow shadow-violet-400/20" style={{animation: 'float-3d-1 8s ease-in-out infinite', animationDelay: '1.5s'}}></div>
-      
-      {/* Floating Diamonds */}
-      <div className="absolute top-[25%] right-[30%] w-6 h-6 bg-gradient-to-br from-emerald-400/35 to-green-500/35 backdrop-blur-sm border border-emerald-300/50 shadow-lg shadow-emerald-400/25" style={{animation: 'float-3d-3 12s ease-in-out infinite', animationDelay: '4s', transform: 'rotate(45deg)'}}></div>
-      <div className="absolute bottom-[35%] left-[18%] w-8 h-8 bg-gradient-to-br from-teal-400/30 to-cyan-500/30 backdrop-blur-sm border border-teal-300/50 shadow shadow-teal-400/25" style={{animation: 'float-3d-4 9s ease-in-out infinite', animationDelay: '2.5s', transform: 'rotate(45deg)'}}></div>
-      
-      {/* Floating Triangles (using clip-path) */}
-      <div className="absolute top-[45%] left-[8%] w-0 h-0 border-l-[20px] border-l-transparent border-r-[20px] border-r-transparent border-b-[35px] border-b-emerald-400/30 backdrop-blur-sm" style={{animation: 'float-3d-1 10s ease-in-out infinite', animationDelay: '0.8s'}}></div>
-      <div className="absolute top-[60%] right-[10%] w-0 h-0 border-l-[15px] border-l-transparent border-r-[15px] border-r-transparent border-b-[28px] border-b-indigo-400/25 backdrop-blur-sm" style={{animation: 'float-3d-2 8s ease-in-out infinite', animationDelay: '3.5s'}}></div>
-      
-      {/* Floating Hexagons */}
-      <div className="absolute top-[70%] left-[30%] w-12 h-12 bg-gradient-to-br from-rose-400/25 to-pink-500/25 backdrop-blur-sm border border-rose-300/40 shadow shadow-rose-400/20" style={{animation: 'float-3d-3 11s ease-in-out infinite', animationDelay: '1.2s', clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'}}></div>
-      <div className="absolute top-[20%] right-[40%] w-10 h-10 bg-gradient-to-br from-sky-400/30 to-blue-500/30 backdrop-blur-sm border border-sky-300/40 shadow-lg shadow-sky-400/20" style={{animation: 'float-3d-4 9s ease-in-out infinite', animationDelay: '2.8s', clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'}}></div>
-      
-      {/* Small Particles */}
-      <div className="absolute top-[12%] left-[35%] w-3 h-3 bg-emerald-400/40 rounded-full backdrop-blur-sm" style={{animation: 'float-3d-1 6s ease-in-out infinite', animationDelay: '0.3s'}}></div>
-      <div className="absolute top-[55%] right-[22%] w-4 h-4 bg-indigo-400/35 rounded-full backdrop-blur-sm" style={{animation: 'float-3d-2 7s ease-in-out infinite', animationDelay: '1.8s'}}></div>
-      <div className="absolute bottom-[18%] left-[45%] w-3 h-3 bg-amber-400/40 rounded-full backdrop-blur-sm" style={{animation: 'float-3d-3 5s ease-in-out infinite', animationDelay: '2.2s'}}></div>
-      <div className="absolute top-[38%] left-[5%] w-2 h-2 bg-purple-400/45 rounded-full backdrop-blur-sm" style={{animation: 'float-3d-4 8s ease-in-out infinite', animationDelay: '0.7s'}}></div>
-      <div className="absolute bottom-[45%] right-[5%] w-3 h-3 bg-teal-400/40 rounded-full backdrop-blur-sm" style={{animation: 'float-3d-1 7s ease-in-out infinite', animationDelay: '3.2s'}}></div>
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          {/* Trust Badge */}
-          <div className="inline-flex items-center bg-white/10 backdrop-blur-md border border-white/20 px-5 py-2.5 rounded-full shadow-lg shadow-amber-500/20 mb-10 animate-float">
-            <Shield className="h-5 w-5 text-amber-300 mr-2" />
-            <span className="text-sm font-medium text-white">Trusted by 10,000+ Readers</span>
-          </div>
+  // Helper function to safely render localized strings (handles JSON strings and objects)
+  const getLocalizedText = (value, lang = 'mr') => {
+    if (!value) return '';
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        if (typeof parsed === 'object' && parsed !== null) {
+          return parsed[lang] || parsed.en || parsed.hi || Object.values(parsed)[0] || '';
+        }
+      } catch (e) {
+        return value;
+      }
+      return value;
+    }
+    if (typeof value === 'object') {
+      return value[lang] || value.en || value.hi || Object.values(value)[0] || '';
+    }
+    return String(value);
+  };
 
-          {/* Main Heading */}
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white mb-6 tracking-tight drop-shadow-lg" style={{textShadow: '0 0 40px rgba(255,255,255,0.3)'}}>
-            आयुष्याचा खरा सल्लागार
-          </h1>
+  // Safe State Initialization
+  const [blogs, setBlogs] = useState([])
+  const [products, setProducts] = useState([])
+  const [blogIndex, setBlogIndex] = useState(0)
+  const [prodIndex, setProdIndex] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-          {/* Tagline */}
-          <p className="text-2xl sm:text-3xl text-emerald-300 mb-6 max-w-3xl mx-auto font-light">
-            Good Thoughts, Health, Ayurveda, ani Motivation
-          </p>
+  // Fetch blogs and products from Supabase
+  useEffect(() => {
+    let isMounted = true
+    
+    if (!supabase) {
+      console.error('Supabase client not initialized')
+      if (isMounted) {
+        setBlogs([])
+        setProducts([])
+        setLoading(false)
+      }
+      return
+    }
+    
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        
+        // Fetch blogs
+        const { data: blogData, error: blogError } = await supabase
+          .from('blogs')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(12)
+        
+        if (blogError) {
+          console.error('Error fetching blogs:', blogError)
+          if (isMounted) setBlogs([])
+        } else {
+          if (isMounted) setBlogs(Array.isArray(blogData) ? blogData : [])
+        }
+        
+        // Fetch products
+        const { data: productData, error: productError } = await supabase
+          .from('products')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(16)
+        
+        if (productError) {
+          console.error('Error fetching products:', productError)
+          if (isMounted) setProducts([])
+        } else {
+          if (isMounted) setProducts(Array.isArray(productData) ? productData : [])
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error)
+        if (isMounted) {
+          setError(error.message)
+          setBlogs([])
+          setProducts([])
+        }
+      } finally {
+        if (isMounted) setLoading(false)
+      }
+    }
+    
+    fetchData()
+    return () => { isMounted = false }
+  }, [])
 
-          {/* Subheading */}
-          <p className="text-lg text-amber-200/90 mb-10 max-w-2xl mx-auto leading-relaxed">
-            Sallagar helps you discover the path to a better life through positive thoughts, 
-            Ayurvedic wisdom, and motivational insights. Transform your life with confidence.
-          </p>
+  // Safe Auto-Slider Intervals for blogs
+  useEffect(() => {
+    if (!blogs || blogs.length <= 3) return
+    const timer = setInterval(() => {
+      setBlogIndex((prev) => (prev + 3 >= blogs.length ? 0 : prev + 3))
+    }, 4000)
+    return () => clearInterval(timer)
+  }, [blogs])
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-            <Link to="/blog" className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold px-6 py-3 rounded-xl transition duration-300 shadow-lg shadow-emerald-900/30">
-              Explore Blog
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-            <Link to="/categories" className="border-2 border-emerald-500/50 hover:border-emerald-500 bg-emerald-950/20 hover:bg-emerald-900/30 text-emerald-300 hover:text-white font-semibold px-6 py-3 rounded-xl transition duration-300">
-              Product Sell
-            </Link>
-          </div>
+  // Safe Auto-Slider Intervals for products
+  useEffect(() => {
+    if (!products || products.length <= 4) return
+    const timer = setInterval(() => {
+      setProdIndex((prev) => (prev + 4 >= products.length ? 0 : prev + 4))
+    }, 4000)
+    return () => clearInterval(timer)
+  }, [products])
 
-          {/* Trust Indicators */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl transition-all duration-300 hover:scale-105 hover:bg-white/10">
-              <div className="flex items-center justify-center mb-3">
-                <Star className="h-5 w-5 text-amber-300 fill-current" />
-                <Star className="h-5 w-5 text-amber-300 fill-current" />
-                <Star className="h-5 w-5 text-amber-300 fill-current" />
-                <Star className="h-5 w-5 text-amber-300 fill-current" />
-                <Star className="h-5 w-5 text-amber-300 fill-current" />
-              </div>
-              <p className="text-sm font-medium text-white">500+ Inspiring Articles</p>
-            </div>
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl transition-all duration-300 hover:scale-105 hover:bg-white/10">
-              <CheckCircle className="h-10 w-10 text-emerald-300 mb-3 mx-auto" />
-              <p className="text-sm font-medium text-white">100% Authentic Content</p>
-            </div>
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl transition-all duration-300 hover:scale-105 hover:bg-white/10">
-              <Shield className="h-10 w-10 text-emerald-300 mb-3 mx-auto" />
-              <p className="text-sm font-medium text-white">Expert Wellness Team</p>
-            </div>
-          </div>
+  if (error) {
+    return (
+      <div className="w-full min-h-screen bg-slate-900 text-white flex items-center justify-center">
+        <div className="text-center p-8">
+          <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
+          <p className="text-slate-400 mb-4">{error}</p>
+          <p className="text-sm text-slate-500">Please check your environment configuration and refresh the page.</p>
         </div>
       </div>
-    </section>
-    </>
+    )
+  }
+
+  return (
+    <div className="w-full min-h-screen bg-gradient-to-b from-[#1e1b2e] via-[#2d2545] to-[#13111c] text-white">
+      <section className="relative overflow-hidden pt-6 pb-4 sm:pt-8 sm:pb-6 bg-gradient-to-r from-purple-900/90 via-indigo-900/80 to-purple-950/90">
+        
+        {/* Ambient Lights */}
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            
+            {/* Trust Badge */}
+            <div className="inline-flex items-center bg-white/10 backdrop-blur-md border border-purple-500/20 px-5 py-2.5 rounded-full shadow-lg mb-4">
+              <Shield className="h-5 w-5 text-purple-300 mr-2" />
+              <span className="text-sm font-medium text-white">Trusted by 10,000+ Readers</span>
+            </div>
+
+            {/* Main Heading */}
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white mb-4 tracking-tight drop-shadow-md">
+              आयुष्याचा खरा सल्लागार
+            </h1>
+
+            {/* Tagline */}
+            <p className="text-xl sm:text-2xl text-purple-200 mb-4 max-w-3xl mx-auto font-light">
+              Good Thoughts, Health, Ayurveda, ani Motivation
+            </p>
+
+            {/* Subheading */}
+            <p className="text-base text-purple-200/90 mb-4 max-w-2xl mx-auto leading-relaxed">
+              Sallagar helps you discover the path to a better life through positive thoughts, 
+              Ayurvedic wisdom, and motivational insights.
+            </p>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-row gap-4 justify-center items-center mb-6">
+              <Link to="/blog" className="bg-orange-500 hover:bg-orange-600 text-black font-bold px-6 py-3 rounded-xl transition shadow-md flex items-center">
+                Explore Blog <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+              <Link to="/categories" className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-6 py-3 rounded-xl transition shadow-md">
+                Product Sell
+              </Link>
+            </div>
+
+            {/* Trust Indicators */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              <div className="bg-white/10 backdrop-blur-md border border-purple-500/20 rounded-2xl p-4 shadow-xl">
+                <div className="flex items-center justify-center mb-2">
+                  <Star className="h-5 w-5 text-purple-300 fill-current" />
+                  <Star className="h-5 w-5 text-purple-300 fill-current" />
+                  <Star className="h-5 w-5 text-purple-300 fill-current" />
+                  <Star className="h-5 w-5 text-purple-300 fill-current" />
+                  <Star className="h-5 w-5 text-purple-300 fill-current" />
+                </div>
+                <p className="text-sm font-medium text-white">500+ Inspiring Articles</p>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-md border border-purple-500/20 rounded-2xl p-4 shadow-xl">
+                <CheckCircle className="h-8 w-8 text-purple-300 mb-2 mx-auto" />
+                <p className="text-sm font-medium text-white">100% Authentic Content</p>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-md border border-purple-500/20 rounded-2xl p-4 shadow-xl">
+                <Shield className="h-8 w-8 text-purple-300 mb-2 mx-auto" />
+                <p className="text-sm font-medium text-white">Expert Wellness Team</p>
+              </div>
+            </div>
+
+            {/* Scroll Indicator */}
+            <div className="flex flex-col items-center justify-center mt-6 text-purple-300/80 animate-bounce cursor-pointer" onClick={() => window.scrollTo({ top: 500, behavior: 'smooth' })}>
+              <span className="text-xs font-semibold tracking-wider uppercase mb-1">Scroll to Explore</span>
+              <ChevronDown className="h-5 w-5 text-purple-300"/>
+            </div>
+
+            {/* Featured Blogs Slider */}
+            <div className="mt-8 max-w-7xl mx-auto text-left">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-white">Featured Blogs</h2>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setBlogIndex((prev) => (prev - 3 < 0 ? Math.max(0, (blogs || []).length - 3) : prev - 3))}
+                    disabled={!blogs || blogs.length <= 3}
+                    className="p-2 rounded-full bg-white/20 hover:bg-white/30 text-white transition disabled:opacity-50"
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </button>
+                  <button
+                    onClick={() => setBlogIndex((prev) => (prev + 3 >= (blogs || []).length ? 0 : prev + 3))}
+                    disabled={!blogs || blogs.length <= 3}
+                    className="p-2 rounded-full bg-white/20 hover:bg-white/30 text-white transition disabled:opacity-50"
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </button>
+                </div>
+              </div>
+
+              {loading ? (
+                <div className="text-center text-slate-400 py-8">Loading blogs...</div>
+              ) : !Array.isArray(blogs) || blogs.length === 0 ? (
+                <div className="text-center text-slate-400 py-8">No blogs found</div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {(blogs || []).slice(blogIndex, blogIndex + 3).map((blog) => (
+                    <Link key={blog.id} to={`/blog/${blog.id}`} className="block">
+                      <div className="bg-white/10 backdrop-blur-md border border-purple-500/20 rounded-2xl overflow-hidden shadow-xl hover:scale-105 transition-all duration-300 h-full">
+                        {blog.image_url ? (
+                          <img src={blog.image_url} alt={getLocalizedText(blog.title)} className="w-full h-48 object-cover object-center" />
+                        ) : (
+                          <div className="h-40 bg-purple-900/40 flex items-center justify-center">
+                            <span className="text-4xl">📝</span>
+                          </div>
+                        )}
+                        <div className="p-5">
+                          <span className="text-xs font-semibold px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full">{blog.category || 'Blog'}</span>
+                          <h3 className="text-lg font-bold text-white mt-2 mb-2 line-clamp-1">{getLocalizedText(blog.title)}</h3>
+                          <p className="text-sm text-slate-300 mb-3 line-clamp-2">{getLocalizedText(blog.excerpt || blog.description) || 'No description'}</p>
+                          <div className="flex items-center justify-between text-xs text-slate-400">
+                            <span>{blog.created_at ? new Date(blog.created_at).toLocaleDateString() : ''}</span>
+                            <span className="font-semibold text-purple-400 flex items-center">Read More →</span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Featured Products Slider */}
+            <div className="mt-8 max-w-7xl mx-auto pb-6 text-left">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-white">Featured Products</h2>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setProdIndex((prev) => (prev - 4 < 0 ? Math.max(0, (products || []).length - 4) : prev - 4))}
+                    disabled={!products || products.length <= 4}
+                    className="p-2 rounded-full bg-white/20 hover:bg-white/30 text-white transition disabled:opacity-50"
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </button>
+                  <button
+                    onClick={() => setProdIndex((prev) => (prev + 4 >= (products || []).length ? 0 : prev + 4))}
+                    disabled={!products || products.length <= 4}
+                    className="p-2 rounded-full bg-white/20 hover:bg-white/30 text-white transition disabled:opacity-50"
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </button>
+                </div>
+              </div>
+
+              {loading ? (
+                <div className="text-center text-slate-400 py-8">Loading products...</div>
+              ) : !Array.isArray(products) || products.length === 0 ? (
+                <div className="text-center text-slate-400 py-8">No products found</div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {(products || []).slice(prodIndex, prodIndex + 4).map((product) => (
+                    <Link key={product.id} to="/categories" className="block">
+                      <div className="bg-white/10 border border-purple-500/20 hover:border-purple-400/50 rounded-2xl p-4 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-purple-500/10 group relative">
+                        <span className="absolute top-3 right-3 bg-purple-500 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-full z-10 uppercase">Featured</span>
+                        <div className="h-36 bg-gradient-to-b from-purple-900/80 to-indigo-800/50 rounded-xl flex items-center justify-center p-3 mb-3 overflow-hidden group-hover:scale-105 transition-transform duration-300">
+                          {product.image_url ? (
+                            <img src={product.image_url} alt={getLocalizedText(product.name) || getLocalizedText(product.title)} className="max-h-full object-contain" />
+                          ) : (
+                            <span className="text-5xl">🛍️</span>
+                          )}
+                        </div>
+                        <h3 className="text-sm font-bold text-white truncate mb-2">{getLocalizedText(product.name) || getLocalizedText(product.title)}</h3>
+                        <div className="flex items-center justify-center mb-2">
+                          <Star className="h-3 w-3 text-purple-300 fill-current" />
+                          <Star className="h-3 w-3 text-purple-300 fill-current" />
+                          <Star className="h-3 w-3 text-purple-300 fill-current" />
+                          <Star className="h-3 w-3 text-purple-300 fill-current" />
+                          <Star className="h-3 w-3 text-purple-300 fill-current" />
+                        </div>
+                        <p className="text-purple-300 text-lg font-black mb-3">₹{product.price}</p>
+                        <div className="bg-gradient-to-r from-purple-400 to-indigo-500 text-white font-extrabold text-xs py-2 px-3 rounded-xl shadow-lg hover:brightness-110 flex items-center justify-center gap-1 w-full transition">
+                          Buy Now 🛒
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+          </div>
+        </div>
+      </section>
+    </div>
   )
 }
 

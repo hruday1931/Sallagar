@@ -18,7 +18,7 @@ function App() {
   return (
     <DarkModeProvider>
       <Router>
-        <div className="min-h-screen flex flex-col bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-50 via-teal-50 to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 animate-gradient transition-colors duration-300">
+        <div className="min-h-screen flex flex-col bg-gradient-to-b from-[#1e1b2e] via-[#2d2545] to-[#13111c] text-white">
           <Header />
           <main className="flex-grow">
             <Routes>

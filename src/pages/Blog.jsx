@@ -159,15 +159,17 @@ const Blog = () => {
   // Fetch posts from Supabase on mount
   useEffect(() => {
     const fetchPosts = async () => {
-      const { data, error } = await supabase
-        .from('blogs')
-        .select('*')
-        .order('created_at', { ascending: false })
-      
-      if (error) {
+      try {
+        const { data, error } = await supabase
+          .from('blogs')
+          .select('*')
+          .order('created_at', { ascending: false })
+        
+        if (error) throw error
+        setPosts(Array.isArray(data) ? data : [])
+      } catch (error) {
         console.error('Error fetching posts:', error)
-      } else {
-        setPosts(data || [])
+        setPosts([])
       }
     }
 
@@ -631,29 +633,29 @@ const Blog = () => {
   return (
     <div className="min-h-screen">
       {/* Header Section */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-teal-600 to-indigo-600 text-white py-20">
+      <div className="relative overflow-hidden bg-gradient-to-r from-purple-900/90 via-indigo-900/80 to-purple-950/90 text-white py-6 sm:py-8">
         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 animate-pulse-glow"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 animate-pulse-glow"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 animate-pulse-glow"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-400/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 animate-pulse-glow"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-5xl font-extrabold text-white tracking-wide mb-4">Blog</h1>
-          <p className="text-xl text-white/90 max-w-2xl font-light">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-wide mb-4">Blog</h1>
+          <p className="text-sm text-white/90 max-w-2xl font-light mt-1">
             Good Thoughts, Health, Ayurveda, ani Motivation - आयुष्याचा खरा सल्लागार
           </p>
         </div>
       </div>
 
       {/* Blog Posts Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Language Filter Tabs */}
-        <div className="mb-8 flex justify-center">
+        <div className="mb-3 flex justify-center">
           <div className="bg-slate-900/10 dark:bg-slate-700/30 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-full p-1 inline-flex gap-2 mx-auto">
             <button
               onClick={() => setFilterLang('all')}
               className={`px-4 py-1.5 rounded-full transition-all duration-200 ${
                 filterLang === 'all' 
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold shadow-md' 
-                  : 'text-slate-700 dark:text-slate-200 hover:text-emerald-700 dark:hover:text-emerald-400 font-semibold transition-colors duration-200'
+                  ? 'bg-purple-600 text-white font-bold shadow-md shadow-purple-500/30' 
+                  : 'text-slate-700 dark:text-slate-200 hover:text-purple-700 dark:hover:text-purple-400 font-semibold transition-colors duration-200'
               }`}
             >
               All
@@ -662,8 +664,8 @@ const Blog = () => {
               onClick={() => setFilterLang('en')}
               className={`px-4 py-1.5 rounded-full transition-all duration-200 ${
                 filterLang === 'en' 
-                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold shadow-md' 
-                  : 'text-slate-700 dark:text-slate-200 hover:text-emerald-700 dark:hover:text-emerald-400 font-semibold transition-colors duration-200'
+                  ? 'bg-purple-600 text-white font-bold shadow-md shadow-purple-500/30' 
+                  : 'text-slate-700 dark:text-slate-200 hover:text-purple-700 dark:hover:text-purple-400 font-semibold transition-colors duration-200'
               }`}
             >
               🇬🇧 English
@@ -672,8 +674,8 @@ const Blog = () => {
               onClick={() => setFilterLang('mr')}
               className={`px-4 py-1.5 rounded-full transition-all duration-200 ${
                 filterLang === 'mr' 
-                  ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white font-bold shadow-md' 
-                  : 'text-slate-700 dark:text-slate-200 hover:text-emerald-700 dark:hover:text-emerald-400 font-semibold transition-colors duration-200'
+                  ? 'bg-purple-600 text-white font-bold shadow-md shadow-purple-500/30' 
+                  : 'text-slate-700 dark:text-slate-200 hover:text-purple-700 dark:hover:text-purple-400 font-semibold transition-colors duration-200'
               }`}
             >
               🇮🇳 मराठी
@@ -682,8 +684,8 @@ const Blog = () => {
               onClick={() => setFilterLang('hi')}
               className={`px-4 py-1.5 rounded-full transition-all duration-200 ${
                 filterLang === 'hi' 
-                  ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold shadow-md' 
-                  : 'text-slate-700 dark:text-slate-200 hover:text-emerald-700 dark:hover:text-emerald-400 font-semibold transition-colors duration-200'
+                  ? 'bg-purple-600 text-white font-bold shadow-md shadow-purple-500/30' 
+                  : 'text-slate-700 dark:text-slate-200 hover:text-purple-700 dark:hover:text-purple-400 font-semibold transition-colors duration-200'
               }`}
             >
               🇮🇳 हिंदी
@@ -692,8 +694,8 @@ const Blog = () => {
         </div>
 
         {/* Search Bar */}
-        <div className="mb-8">
-          <div className="glassmorphism rounded-3xl shadow-lg p-6">
+        <div className="mb-3">
+          <div className="glassmorphism rounded-3xl shadow-lg p-4">
             <div className="relative max-w-2xl mx-auto">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 dark:text-slate-500" />
               <input
@@ -701,21 +703,21 @@ const Blog = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search blogs by title or content..."
-                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 dark:focus:border-emerald-400 transition-all duration-300 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
+                className="w-full pl-12 pr-4 py-2 bg-white dark:bg-slate-800 border border-purple-500/30 rounded-2xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 dark:focus:border-purple-400 transition-all duration-300 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
               />
             </div>
           </div>
         </div>
 
         {/* Category Filter Buttons */}
-        <div className="mb-8">
-          <div className="glassmorphism rounded-3xl shadow-lg p-6 dark:bg-slate-800/50 dark:border-slate-700">
-            <div className="flex flex-wrap gap-3 justify-center">
+        <div className="mb-4">
+          <div className="glassmorphism rounded-3xl shadow-lg p-4 dark:bg-slate-800/50 dark:border-slate-700">
+            <div className="flex flex-wrap gap-2 justify-center">
               <button
                 onClick={() => setActiveCategory('All')}
-                className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-200 ${
+                className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all duration-200 ${
                   activeCategory === 'All'
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md'
+                    ? 'bg-purple-600 text-white font-bold shadow-md shadow-purple-500/30'
                     : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600'
                 }`}
               >
@@ -723,9 +725,9 @@ const Blog = () => {
               </button>
               <button
                 onClick={() => setActiveCategory('Good Thoughts')}
-                className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-200 ${
+                className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all duration-200 ${
                   activeCategory === 'Good Thoughts'
-                    ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-md'
+                    ? 'bg-purple-600 text-white font-bold shadow-md shadow-purple-500/30'
                     : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600'
                 }`}
               >
@@ -733,9 +735,9 @@ const Blog = () => {
               </button>
               <button
                 onClick={() => setActiveCategory('Fitness')}
-                className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-200 ${
+                className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all duration-200 ${
                   activeCategory === 'Fitness'
-                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                    ? 'bg-purple-600 text-white font-bold shadow-md shadow-purple-500/30'
                     : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600'
                 }`}
               >
@@ -743,9 +745,9 @@ const Blog = () => {
               </button>
               <button
                 onClick={() => setActiveCategory('Health & Ayurveda')}
-                className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-200 ${
+                className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all duration-200 ${
                   activeCategory === 'Health & Ayurveda'
-                    ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md'
+                    ? 'bg-purple-600 text-white font-bold shadow-md shadow-purple-500/30'
                     : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600'
                 }`}
               >
@@ -753,9 +755,9 @@ const Blog = () => {
               </button>
               <button
                 onClick={() => setActiveCategory('Motivation')}
-                className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-200 ${
+                className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all duration-200 ${
                   activeCategory === 'Motivation'
-                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md'
+                    ? 'bg-purple-600 text-white font-bold shadow-md shadow-purple-500/30'
                     : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600'
                 }`}
               >
@@ -766,7 +768,7 @@ const Blog = () => {
         </div>
 
         {/* Admin Toggle Button */}
-        <div className="mb-8 flex gap-3">
+        <div className="mb-4 flex gap-3">
           {isUserAdmin && (
             <>
               <button
@@ -1050,7 +1052,7 @@ const Blog = () => {
                     <span className="text-2xl">🛒</span> Recommended Products (Up to 3)
                   </label>
                   <div className="space-y-6">
-                    {newPost.recommendedProducts.map((product, index) => (
+                    {newPost.recommendedProducts?.map((product, index) => (
                       <div key={index} className="p-5 border border-gray-200 dark:border-slate-600 rounded-2xl bg-gray-50 dark:bg-slate-700/50">
                         <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4">Product {index + 1}</h4>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1250,8 +1252,8 @@ const Blog = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredBlogs.map((post) => {
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+          {filteredBlogs?.map((post) => {
               const postLang = post.language || 'en';
               return (
                 <article key={post.id} className="glassmorphism dark:bg-slate-800 rounded-3xl shadow-md overflow-hidden hover:shadow-2xl hover:shadow-emerald-200/50 transition-all duration-500 ease-out hover:-translate-y-3 hover:scale-[1.02]">

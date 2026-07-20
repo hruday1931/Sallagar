@@ -107,16 +107,14 @@ const BlogPost = () => {
   // Fetch post from Supabase on mount
   useEffect(() => {
     const fetchPost = async () => {
-      const { data, error } = await supabase
-        .from('blogs')
-        .select('*')
-        .eq('id', id)
-        .single()
+      try {
+        const { data, error } = await supabase
+          .from('blogs')
+          .select('*')
+          .eq('id', id)
+          .single()
 
-      if (error) {
-        console.error('Error fetching post:', error)
-        setError(error)
-      } else {
+        if (error) throw error
         setPost(data)
         
         // Increment views count
@@ -130,19 +128,25 @@ const BlogPost = () => {
         
         // Fetch related posts
         if (data.category) {
-          const { data: relatedData } = await supabase
+          const { data: relatedData, error: relatedError } = await supabase
             .from('blogs')
             .select('*')
             .eq('category', data.category)
             .neq('id', id)
             .limit(3)
           
-          if (relatedData) {
-            setRelatedPosts(relatedData)
+          if (relatedError) {
+            console.error('Error fetching related posts:', relatedError)
+          } else {
+            setRelatedPosts(Array.isArray(relatedData) ? relatedData : [])
           }
         }
+      } catch (error) {
+        console.error('Error fetching post:', error)
+        setError(error)
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
     }
 
     fetchPost()
@@ -183,12 +187,12 @@ const BlogPost = () => {
 
   if (loading) {
     return (
-      <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-b from-[#022c22] to-[#0f172a]' : 'bg-gradient-to-b from-emerald-50 to-slate-100'} flex items-center justify-center`}>
+      <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-b from-[#1e1b2e] to-[#13111c]' : 'bg-gradient-to-b from-purple-50 to-indigo-100'} flex items-center justify-center`}>
         <div className="text-center">
-          <div className={`inline-flex items-center justify-center w-16 h-16 ${isDarkMode ? 'bg-gradient-to-br from-emerald-100 to-teal-100' : 'bg-gradient-to-br from-emerald-500 to-teal-600'} rounded-full mb-6 animate-pulse`}>
+          <div className={`inline-flex items-center justify-center w-16 h-16 ${isDarkMode ? 'bg-gradient-to-br from-purple-100 to-indigo-100' : 'bg-gradient-to-br from-purple-500 to-indigo-600'} rounded-full mb-6 animate-pulse`}>
             <span className="text-3xl">📝</span>
           </div>
-          <p className={`text-xl font-bold ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'} mb-3`}>Loading...</p>
+          <p className={`text-xl font-bold ${isDarkMode ? 'text-purple-400' : 'text-purple-600'} mb-3`}>Loading...</p>
         </div>
       </div>
     )
@@ -199,7 +203,7 @@ const BlogPost = () => {
       <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-b from-[#022c22] to-[#0f172a]' : 'bg-gradient-to-b from-emerald-50 to-slate-100'} flex items-center justify-center`}>
         <div className="text-center">
           <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'} mb-4`}>Post Not Found</h1>
-          <Link to="/blog" className={isDarkMode ? 'text-emerald-300 hover:text-emerald-200' : 'text-emerald-600 hover:text-emerald-700'}>
+          <Link to="/blog" className={isDarkMode ? 'text-purple-300 hover:text-purple-200' : 'text-purple-600 hover:text-purple-700'}>
             Back to Blog
           </Link>
         </div>
@@ -210,12 +214,12 @@ const BlogPost = () => {
   const postLang = post.language || 'en';
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-b from-[#022c22] to-[#0f172a] text-white' : 'bg-gradient-to-b from-emerald-50 to-slate-100 text-slate-900'}`}>
+    <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-b from-[#1e1b2e] to-[#13111c] text-white' : 'bg-gradient-to-b from-purple-50 to-indigo-100 text-slate-900'}`}>
       {/* Premium Ambient Light Leaks */}
       {isDarkMode && (
         <>
-          <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 animate-pulse"></div>
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 animate-pulse" style={{animationDelay: '1s'}}></div>
+          <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 animate-pulse"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 animate-pulse" style={{animationDelay: '1s'}}></div>
         </>
       )}
       
@@ -234,12 +238,12 @@ const BlogPost = () => {
           <div className="max-w-4xl mx-auto">
             <Link 
               to="/blog"
-              className={`inline-flex items-center ${isDarkMode ? 'text-white hover:text-emerald-300' : 'text-white hover:text-emerald-200'} transition-colors mb-4 hover:translate-x-1`}
+              className={`inline-flex items-center ${isDarkMode ? 'text-white hover:text-purple-300' : 'text-white hover:text-purple-200'} transition-colors mb-4 hover:translate-x-1`}
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Blog
             </Link>
-            <span className="bg-gradient-to-r from-emerald-400 to-emerald-600 text-white px-3 py-1 rounded-full text-sm font-semibold inline-block mb-4">
+            <span className="bg-gradient-to-r from-purple-400 to-purple-600 text-white px-3 py-1 rounded-full text-sm font-semibold inline-block mb-4">
               {post.category}
             </span>
             <h1 className={`text-3xl sm:text-4xl lg:text-5xl font-bold ${isDarkMode ? 'text-white' : 'text-white'} mb-4 drop-shadow-lg`}>
@@ -324,7 +328,7 @@ const BlogPost = () => {
               
               {/* Product Cards Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {post.recommended_products.map((product, index) => (
+                {post.recommended_products?.map((product, index) => (
                   <div 
                     key={index}
                     className={`${isDarkMode ? 'bg-white/10 border-white/20 hover:border-emerald-400/50' : 'bg-white border-slate-200 hover:border-emerald-300'} backdrop-blur-md border rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/20 hover:-translate-y-2 hover:scale-[1.02]`}
@@ -370,7 +374,7 @@ const BlogPost = () => {
               Related Posts
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {relatedPosts.map((relatedPost) => {
+              {relatedPosts?.map((relatedPost) => {
                 const relatedPostLang = relatedPost.language || 'en';
                 return (
                   <Link 

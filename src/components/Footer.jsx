@@ -94,7 +94,7 @@ const Footer = () => {
           <div>
             <h4 className="text-lg font-semibold mb-4 text-emerald-300">Categories</h4>
             <ul className="space-y-2">
-              {categories.map((category) => (
+              {categories?.map((category) => (
                 <li key={category}>
                   <a 
                     href={`/categories?category=${encodeURIComponent(category)}`}

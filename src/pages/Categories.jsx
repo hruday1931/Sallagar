@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { ShoppingBag, ExternalLink, Plus, Trash2, X, Edit, XCircle, Shield, Edit2 } from 'lucide-react'
+import { ShoppingBag, ExternalLink, Plus, Trash2, X, Edit, XCircle, Shield, Edit2, Search } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { isAdmin, adminLogout } from '../utils/adminAuth'
@@ -19,6 +19,7 @@ const Categories = () => {
   const [editingProduct, setEditingProduct] = useState(null)
   const [showProductDetails, setShowProductDetails] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
 
   const categories = ['All', 'Electronics', 'Home & Kitchen', 'Fashion', 'Health & Wellness', 'Sports & Outdoors']
   const storeOptions = ['Amazon', 'Flipkart', 'Meesho', 'Myntra', 'AJIO']
@@ -324,32 +325,33 @@ const Categories = () => {
     return styles[store] || styles.Amazon // Default to Amazon if store not found
   }
 
-  // Filter instantly in memory for instant category switching
+  // Filter instantly in memory for instant category switching and search
   const filteredProducts = allProducts.filter(product => {
-    if (selectedCategory === 'All') return true
-    return product.category?.toLowerCase() === selectedCategory.toLowerCase()
+    const matchesCategory = selectedCategory === 'All' || product.category?.toLowerCase() === selectedCategory.toLowerCase()
+    const matchesSearch = (product.name || product.title || '').toLowerCase().includes(searchTerm.toLowerCase())
+    return matchesCategory && matchesSearch
   })
 
   return (
     <div className="min-h-screen">
-      <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-teal-600 to-indigo-600 text-white py-20">
+      <div className="relative overflow-hidden bg-gradient-to-r from-purple-900/90 via-indigo-900/80 to-purple-950/90 text-white py-6 sm:py-8">
         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 animate-pulse-glow"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 animate-pulse-glow"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 animate-pulse-glow"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-400/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 animate-pulse-glow"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center mb-4">
-            <ShoppingBag className="h-10 w-10 mr-4" />
-            <h1 className="text-5xl sm:text-6xl font-bold tracking-tight">Categories</h1>
+          <div className="flex items-center mb-2">
+            <ShoppingBag className="h-7 w-7 sm:h-8 sm:w-8 mr-3" />
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">Categories</h1>
           </div>
-          <p className="text-xl text-white/90 max-w-2xl font-light">
+          <p className="text-xs sm:text-sm text-slate-200 mt-1 max-w-2xl font-light">
             Browse our recommended products by category
           </p>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Admin Toggle Button */}
-        <div className="mb-8 flex gap-3">
+        <div className="my-3 flex gap-3">
           {isUserAdmin && (
             <>
               <button
@@ -368,7 +370,7 @@ const Categories = () => {
                   setSelectedFile(null)
                   setShowAdminForm(!showAdminForm)
                 }}
-                className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-5 py-3 rounded-2xl font-semibold transition-all duration-500 ease-out hover:-translate-y-1 hover:scale-105 shadow-lg shadow-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-500/50"
+                className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white py-2 px-4 text-xs font-bold rounded-2xl transition-all duration-500 ease-out hover:-translate-y-1 hover:scale-105 shadow-lg shadow-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-500/50"
               >
                 {showAdminForm ? (
                   <>
@@ -525,16 +527,28 @@ const Categories = () => {
           </div>
         )}
 
+        {/* Search Bar */}
+        <div className="relative mb-4 max-w-xl">
+          <input
+            type="text"
+            placeholder="Search products by title or category..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-slate-800/90 border border-slate-700 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+          />
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400"/>
+        </div>
+
         {/* Category Filter Buttons */}
-        <div className="flex flex-wrap gap-3 mb-8">
+        <div className="flex flex-wrap gap-3 my-3">
           {categories.map((category) => (
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-6 py-3 rounded-full font-semibold transition-all duration-500 ease-out ${
+              className={`py-1.5 px-3.5 text-xs font-medium rounded-full transition-colors ${
                 selectedCategory === category
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30 scale-105 hover:scale-110'
-                  : 'glassmorphism text-slate-700 hover:bg-gradient-to-br hover:from-emerald-50 hover:to-teal-50 hover:text-emerald-600 shadow-md border border-white/50 hover:shadow-emerald-200/50 hover:-translate-y-1'
+                  ? 'bg-purple-600 text-white font-bold shadow-md shadow-purple-500/30'
+                  : 'bg-slate-800/80 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 font-medium transition-colors'
               }`}
             >
               {category}
@@ -552,11 +566,11 @@ const Categories = () => {
 
         {/* Products Grid */}
         {!loading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProducts.map((product) => (
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredProducts?.map((product) => (
             <div 
               key={product.id}
-              className="glassmorphism dark:bg-slate-800 rounded-3xl shadow-md overflow-hidden hover:shadow-2xl hover:shadow-emerald-200/50 transition-all duration-500 ease-out hover:-translate-y-3 hover:scale-[1.02] cursor-pointer"
+              className="bg-purple-950/40 border border-purple-500/20 hover:border-purple-400/50 rounded-3xl shadow-md overflow-hidden hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-500 ease-out hover:-translate-y-3 hover:scale-[1.02] cursor-pointer"
               onClick={() => handleViewProduct(product)}
             >
               <div className="relative">
