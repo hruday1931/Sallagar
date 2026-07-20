@@ -123,9 +123,9 @@ const Hero = () => {
 
   // Safe Auto-Slider Intervals for blogs
   useEffect(() => {
-    if (!blogs || blogs.length <= 3) return
+    if (!blogs || blogs.length <= 4) return
     const timer = setInterval(() => {
-      setBlogIndex((prev) => (prev + 3 >= blogs.length ? 0 : prev + 3))
+      setBlogIndex((prev) => (prev + 4 >= blogs.length ? 0 : prev + 4))
     }, 4000)
     return () => clearInterval(timer)
   }, [blogs])
@@ -230,15 +230,15 @@ const Hero = () => {
                 <h2 className="text-2xl font-bold text-white">Featured Blogs</h2>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setBlogIndex((prev) => (prev - 3 < 0 ? Math.max(0, (blogs || []).length - 3) : prev - 3))}
-                    disabled={!blogs || blogs.length <= 3}
+                    onClick={() => setBlogIndex((prev) => (prev - 4 < 0 ? Math.max(0, (blogs || []).length - 4) : prev - 4))}
+                    disabled={!blogs || blogs.length <= 4}
                     className="p-2 rounded-full bg-white/20 hover:bg-white/30 text-white transition disabled:opacity-50"
                   >
                     <ChevronLeft className="h-6 w-6" />
                   </button>
                   <button
-                    onClick={() => setBlogIndex((prev) => (prev + 3 >= (blogs || []).length ? 0 : prev + 3))}
-                    disabled={!blogs || blogs.length <= 3}
+                    onClick={() => setBlogIndex((prev) => (prev + 4 >= (blogs || []).length ? 0 : prev + 4))}
+                    disabled={!blogs || blogs.length <= 4}
                     className="p-2 rounded-full bg-white/20 hover:bg-white/30 text-white transition disabled:opacity-50"
                   >
                     <ChevronRight className="h-6 w-6" />
@@ -247,9 +247,9 @@ const Hero = () => {
               </div>
 
               {loading ? (
-                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 w-full">
                   {[...Array(4)].map((_, i) => (
-                    <div key={i} className="bg-white/10 backdrop-blur-md border border-purple-500/20 rounded-2xl overflow-hidden">
+                    <div key={i} className="bg-white/10 backdrop-blur-md border border-purple-500/20 rounded-2xl overflow-hidden w-full">
                       <div className="h-48 bg-slate-200 dark:bg-slate-700 animate-pulse" />
                       <div className="p-2 sm:p-5">
                         <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mb-2" />
@@ -261,10 +261,10 @@ const Hero = () => {
               ) : !Array.isArray(blogs) || blogs.length === 0 ? (
                 <div className="text-center text-slate-400 py-8">No blogs found</div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
-                  {(blogs || []).slice(blogIndex, blogIndex + 3).map((blog) => (
-                    <Link key={blog.id} to={`/blog/${blog.id}`} className="block">
-                      <div className="bg-white/10 backdrop-blur-md border border-purple-500/20 rounded-2xl overflow-hidden shadow-xl hover:scale-105 transition-all duration-300 h-full">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 w-full">
+                  {(blogs || []).slice(blogIndex, blogIndex + 4).map((blog) => (
+                    <Link key={blog.id} to={`/blog/${blog.id}`} className="block w-full">
+                      <div className="bg-white/10 backdrop-blur-md border border-purple-500/20 rounded-2xl overflow-hidden shadow-xl hover:scale-105 transition-all duration-300 h-full w-full">
                         {blog.image_url ? (
                           <img src={blog.image_url} alt={getLocalizedText(blog.title)} className="w-full h-48 object-cover object-center" />
                         ) : (
