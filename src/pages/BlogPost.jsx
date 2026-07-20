@@ -185,9 +185,26 @@ const BlogPost = () => {
       .eq('id', id)
   }
 
+  // Handle share button click
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: post?.title ? getLocalizedText(post.title, postLang) : 'Sallagar Blog',
+          url: window.location.href,
+        });
+      } catch (err) {
+        console.log('Share canceled or failed:', err);
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert('Link copied to clipboard!');
+    }
+  }
+
   if (loading) {
     return (
-      <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-b from-[#1e1b2e] to-[#13111c]' : 'bg-gradient-to-b from-purple-50 to-indigo-100'} flex items-center justify-center`}>
+      <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-b from-[#1e1b2e] via-[#2d2545] to-[#13111c]' : 'bg-gradient-to-b from-purple-50 to-indigo-100'} flex items-center justify-center`}>
         <div className="text-center">
           <div className={`inline-flex items-center justify-center w-16 h-16 ${isDarkMode ? 'bg-gradient-to-br from-purple-100 to-indigo-100' : 'bg-gradient-to-br from-purple-500 to-indigo-600'} rounded-full mb-6 animate-pulse`}>
             <span className="text-3xl">📝</span>
@@ -200,7 +217,7 @@ const BlogPost = () => {
 
   if (error || !post) {
     return (
-      <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-b from-[#022c22] to-[#0f172a]' : 'bg-gradient-to-b from-emerald-50 to-slate-100'} flex items-center justify-center`}>
+      <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-b from-[#1e1b2e] via-[#2d2545] to-[#13111c]' : 'bg-gradient-to-b from-purple-50 to-indigo-100'} flex items-center justify-center`}>
         <div className="text-center">
           <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'} mb-4`}>Post Not Found</h1>
           <Link to="/blog" className={isDarkMode ? 'text-purple-300 hover:text-purple-200' : 'text-purple-600 hover:text-purple-700'}>
@@ -214,7 +231,7 @@ const BlogPost = () => {
   const postLang = post.language || 'en';
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-b from-[#1e1b2e] to-[#13111c] text-white' : 'bg-gradient-to-b from-purple-50 to-indigo-100 text-slate-900'}`}>
+    <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-b from-[#1e1b2e] via-[#2d2545] to-[#13111c] text-white' : 'bg-gradient-to-b from-purple-50 to-indigo-100 text-slate-900'}`}>
       {/* Premium Ambient Light Leaks */}
       {isDarkMode && (
         <>
@@ -224,16 +241,16 @@ const BlogPost = () => {
       )}
       
       {/* Header Image */}
-      <div className="relative h-96">
+      <div className="relative min-h-[320px] max-h-[480px] w-full">
         <img 
           src={getImageUrl(post)}
           alt={getLocalizedText(post.title, postLang)}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover object-center"
           onError={(e) => {
             e.target.src = 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800';
           }}
         />
-        <div className={`absolute inset-0 bg-gradient-to-t ${isDarkMode ? 'from-[#022c22]' : 'from-slate-900/80'} to-transparent`} />
+        <div className={`absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent`} />
         <div className="absolute bottom-0 left-0 right-0 p-8">
           <div className="max-w-4xl mx-auto">
             <Link 
@@ -258,15 +275,15 @@ const BlogPost = () => {
         {/* Meta Information */}
         <div className={`flex flex-wrap items-center gap-4 ${isDarkMode ? 'text-gray-300 border-b border-white/10' : 'text-slate-600 border-b border-slate-200'} mb-8 pb-8`}>
           <div className="flex items-center">
-            <Calendar className={`h-4 w-4 mr-2 ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`} />
+            <Calendar className={`h-4 w-4 mr-2 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
             <span>{post.date}</span>
           </div>
           <div className="flex items-center">
-            <Clock className={`h-4 w-4 mr-2 ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`} />
+            <Clock className={`h-4 w-4 mr-2 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
             <span>{post.read_time || post.readTime}</span>
           </div>
           <div className="flex items-center">
-            <Eye className={`h-4 w-4 mr-2 ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`} />
+            <Eye className={`h-4 w-4 mr-2 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
             <span>{post.views || 0} views</span>
           </div>
           <div className="flex items-center ml-auto">
@@ -286,7 +303,10 @@ const BlogPost = () => {
               <Heart className={`h-5 w-5 mr-2 ${liked ? 'fill-current' : ''}`} />
               {post.likes || 0}
             </button>
-            <button className={`flex items-center ${isDarkMode ? 'text-gray-300 hover:text-emerald-400' : 'text-slate-600 hover:text-emerald-600'} transition-colors hover:scale-110`}>
+            <button 
+              onClick={handleShare}
+              className={`flex items-center ${isDarkMode ? 'text-gray-300 hover:text-purple-400' : 'text-slate-600 hover:text-purple-600'} transition-colors hover:scale-110`}
+            >
               <Share2 className="h-5 w-5 mr-2" />
               Share
             </button>
@@ -295,13 +315,13 @@ const BlogPost = () => {
 
         {/* Affiliate Disclosure */}
         {post?.has_affiliate === true && (
-          <div className={`${isDarkMode ? 'bg-white/5 border-amber-500/20' : 'bg-amber-50 border-amber-200'} backdrop-blur-md border rounded-2xl p-4 mb-8 hover:shadow-lg hover:shadow-amber-500/20 transition-all duration-300`}>
+          <div className={`${isDarkMode ? 'bg-white/5 border-purple-500/20' : 'bg-purple-50 border-purple-200'} backdrop-blur-md border rounded-2xl p-4 mb-8 hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300`}>
             <div className="flex">
               <div className="flex-shrink-0">
-                <Tag className={`h-5 w-5 ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`} />
+                <Tag className={`h-5 w-5 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
               </div>
               <div className="ml-3">
-                <p className={`text-sm ${isDarkMode ? 'text-amber-200' : 'text-amber-800'}`}>
+                <p className={`text-sm ${isDarkMode ? 'text-purple-200' : 'text-purple-800'}`}>
                   <strong>Affiliate Disclosure:</strong> This post contains affiliate links. If you make a purchase through these links, we may earn a commission at no extra cost to you.
                 </p>
               </div>
@@ -318,7 +338,7 @@ const BlogPost = () => {
         {/* Affiliate CTA Section */}
         {post?.has_affiliate === true && post?.recommended_products && post.recommended_products.length > 0 && (
           <div className="mt-12 mb-8">
-            <div className={`${isDarkMode ? 'bg-gradient-to-r from-emerald-500/20 to-amber-500/20 border-white/10' : 'bg-gradient-to-r from-emerald-100 to-amber-100 border-emerald-200'} backdrop-blur-md border rounded-2xl p-8`}>
+            <div className={`${isDarkMode ? 'bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border-white/10' : 'bg-gradient-to-r from-purple-100 to-indigo-100 border-purple-200'} backdrop-blur-md border rounded-2xl p-8`}>
               <h3 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'} mb-2 text-center`}>
                 ⚡ Recommended Products for You
               </h3>
@@ -331,14 +351,14 @@ const BlogPost = () => {
                 {post.recommended_products?.map((product, index) => (
                   <div 
                     key={index}
-                    className={`${isDarkMode ? 'bg-white/10 border-white/20 hover:border-emerald-400/50' : 'bg-white border-slate-200 hover:border-emerald-300'} backdrop-blur-md border rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/20 hover:-translate-y-2 hover:scale-[1.02]`}
+                    className={`${isDarkMode ? 'bg-white/10 border-white/20 hover:border-purple-400/50' : 'bg-white border-slate-200 hover:border-purple-300'} backdrop-blur-md border rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/20 hover:-translate-y-2 hover:scale-[1.02]`}
                   >
                     {/* Product Image */}
-                    <div className="relative h-48 overflow-hidden">
+                    <div className="h-48 sm:h-52 w-full flex items-center justify-center p-3 bg-white/5 rounded-xl">
                       <img 
                         src={product.image || product.imageUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400'}
                         alt={product.name}
-                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+                        className="max-h-full max-w-full object-contain transition-transform duration-300 hover:scale-110"
                         onError={(e) => {
                           e.target.src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400';
                         }}
@@ -355,7 +375,7 @@ const BlogPost = () => {
                         href={product.link || product.affiliateLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-4 py-3 rounded-xl font-semibold transition-all duration-300 ease-out hover:-translate-y-1 hover:scale-105 shadow-lg shadow-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-500/50"
+                        className="inline-flex items-center justify-center w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white px-4 py-3 rounded-xl font-semibold transition-all duration-300 ease-out hover:-translate-y-1 hover:scale-105 shadow-lg shadow-purple-500/30 hover:shadow-2xl hover:shadow-purple-500/50"
                       >
                         Buy Now 🛒
                       </a>
@@ -380,7 +400,7 @@ const BlogPost = () => {
                   <Link 
                     key={relatedPost.id} 
                     to={`/blog/${relatedPost.id}`}
-                    className={`${isDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'} backdrop-blur-md border rounded-2xl p-4 hover:shadow-xl hover:shadow-emerald-500/20 transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02] block`}
+                    className={`${isDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'} backdrop-blur-md border rounded-2xl p-4 hover:shadow-xl hover:shadow-purple-500/20 transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02] block`}
                   >
                     <div className="relative mb-3">
                       <img 
@@ -398,7 +418,7 @@ const BlogPost = () => {
                     <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-slate-600'} mb-3 line-clamp-2`}>
                       {getLocalizedText(relatedPost.excerpt, relatedPostLang)}
                     </p>
-                    <span className={`text-sm font-semibold inline-block ${isDarkMode ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-700'}`}>
+                    <span className={`text-sm font-semibold inline-block ${isDarkMode ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-700'}`}>
                       Read More →
                     </span>
                   </Link>

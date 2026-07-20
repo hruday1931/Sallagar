@@ -12,6 +12,7 @@ const Blog = () => {
   const [showAdminForm, setShowAdminForm] = useState(false)
   const [posts, setPosts] = useState([])
   const [filterLang, setFilterLang] = useState('all')
+  const [loading, setLoading] = useState(true)
   const [isUserAdmin, setIsUserAdmin] = useState(() => {
     const token = localStorage.getItem('is_admin');
     // Strict check: only true if token is exactly the string 'true'
@@ -156,9 +157,21 @@ const Blog = () => {
     return matchesCategory && matchesLanguage && matchesSearch;
   });
 
-  // Fetch posts from Supabase on mount
+  // Fetch posts from Supabase on mount with caching
   useEffect(() => {
     const fetchPosts = async () => {
+      // Check cache first
+      const cachedPosts = localStorage.getItem('cached_blogs')
+      const cacheTime = localStorage.getItem('blogs_cache_time')
+      const now = Date.now()
+      const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+      
+      if (cachedPosts && cacheTime && (now - parseInt(cacheTime)) < CACHE_DURATION) {
+        setPosts(JSON.parse(cachedPosts))
+        setLoading(false)
+        return
+      }
+      
       try {
         const { data, error } = await supabase
           .from('blogs')
@@ -166,10 +179,17 @@ const Blog = () => {
           .order('created_at', { ascending: false })
         
         if (error) throw error
-        setPosts(Array.isArray(data) ? data : [])
+        const postsData = Array.isArray(data) ? data : []
+        setPosts(postsData)
+        
+        // Cache the results
+        localStorage.setItem('cached_blogs', JSON.stringify(postsData))
+        localStorage.setItem('blogs_cache_time', now.toString())
       } catch (error) {
         console.error('Error fetching posts:', error)
         setPosts([])
+      } finally {
+        setLoading(false)
       }
     }
 
@@ -767,6 +787,22 @@ const Blog = () => {
           </div>
         </div>
 
+        {/* Skeleton Loader */}
+        {loading && (
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 mt-4">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="glassmorphism dark:bg-slate-800 rounded-3xl shadow-md overflow-hidden">
+                <div className="h-56 bg-slate-200 dark:bg-slate-700 animate-pulse" />
+                <div className="p-2 sm:p-4 dark:bg-slate-800">
+                  <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mb-2" />
+                  <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mb-2" />
+                  <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded animate-pulse w-2/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Admin Toggle Button */}
         <div className="mb-4 flex gap-3">
           {isUserAdmin && (
@@ -1252,8 +1288,9 @@ const Blog = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
-          {filteredBlogs?.map((post) => {
+        {!loading && (
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 mt-4">
+            {filteredBlogs?.map((post) => {
               const postLang = post.language || 'en';
               return (
                 <article key={post.id} className="glassmorphism dark:bg-slate-800 rounded-3xl shadow-md overflow-hidden hover:shadow-2xl hover:shadow-emerald-200/50 transition-all duration-500 ease-out hover:-translate-y-3 hover:scale-[1.02]">
@@ -1305,21 +1342,21 @@ const Blog = () => {
                     )}
                   </div>
                   
-                  <div className="p-6 dark:bg-slate-800">
-                    <div className="flex items-center text-sm text-slate-500 dark:text-slate-400 mb-3">
-                      <Calendar className="h-4 w-4 mr-1" />
-                      <span className="mr-4">{post.date}</span>
-                      <Clock className="h-4 w-4 mr-1" />
+                  <div className="p-2 sm:p-4 dark:bg-slate-800">
+                    <div className="flex items-center text-[10px] sm:text-sm text-slate-500 dark:text-slate-400 mb-2">
+                      <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                      <span className="mr-2 sm:mr-4">{post.date}</span>
+                      <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                       <span>{post.read_time || post.readTime}</span>
                     </div>
                     
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-3 line-clamp-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                    <h2 className="text-xs sm:text-base font-bold text-slate-900 dark:text-slate-100 mb-2 sm:mb-3 line-clamp-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
                       <Link to={`/blog/${post.id}`}>
                         {getLocalizedText(post.title, postLang)}
                       </Link>
                     </h2>
                     
-                    <p className="text-slate-600 dark:text-slate-300 mb-4 line-clamp-3">
+                    <p className="text-[10px] sm:text-sm text-slate-600 dark:text-slate-300 mb-2 sm:mb-4 line-clamp-2 sm:line-clamp-3">
                       {getLocalizedText(post.excerpt, postLang)}
                     </p>
                     
@@ -1338,16 +1375,17 @@ const Blog = () => {
                     
                     <Link 
                       to={`/blog/${post.id}`}
-                      className="inline-flex items-center text-emerald-600 dark:text-emerald-400 font-semibold hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors hover:translate-x-1"
+                      className="inline-flex items-center text-[10px] sm:text-sm text-emerald-600 dark:text-emerald-400 font-semibold hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors hover:translate-x-1"
                     >
                       Read More
-                      <ArrowRight className="ml-2 h-4 w-4" />
+                      <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
                     </Link>
                   </div>
                 </article>
               );
             })}
         </div>
+        )}
 
         {filteredBlogs.length === 0 && (
           <div className="text-center py-20">

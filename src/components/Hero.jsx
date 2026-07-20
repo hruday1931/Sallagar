@@ -32,7 +32,7 @@ const Hero = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // Fetch blogs and products from Supabase
+  // Fetch blogs and products from Supabase with caching
   useEffect(() => {
     let isMounted = true
     
@@ -47,6 +47,22 @@ const Hero = () => {
     }
     
     const fetchData = async () => {
+      // Check cache first
+      const cachedBlogs = localStorage.getItem('cached_hero_blogs')
+      const cachedProducts = localStorage.getItem('cached_hero_products')
+      const cacheTime = localStorage.getItem('hero_cache_time')
+      const now = Date.now()
+      const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+      
+      if (cachedBlogs && cachedProducts && cacheTime && (now - parseInt(cacheTime)) < CACHE_DURATION) {
+        if (isMounted) {
+          setBlogs(JSON.parse(cachedBlogs))
+          setProducts(JSON.parse(cachedProducts))
+          setLoading(false)
+        }
+        return
+      }
+      
       try {
         setLoading(true)
         
@@ -61,7 +77,8 @@ const Hero = () => {
           console.error('Error fetching blogs:', blogError)
           if (isMounted) setBlogs([])
         } else {
-          if (isMounted) setBlogs(Array.isArray(blogData) ? blogData : [])
+          const blogsData = Array.isArray(blogData) ? blogData : []
+          if (isMounted) setBlogs(blogsData)
         }
         
         // Fetch products
@@ -75,7 +92,15 @@ const Hero = () => {
           console.error('Error fetching products:', productError)
           if (isMounted) setProducts([])
         } else {
-          if (isMounted) setProducts(Array.isArray(productData) ? productData : [])
+          const productsData = Array.isArray(productData) ? productData : []
+          if (isMounted) setProducts(productsData)
+        }
+        
+        // Cache the results
+        if (isMounted) {
+          localStorage.setItem('cached_hero_blogs', JSON.stringify(blogsData))
+          localStorage.setItem('cached_hero_products', JSON.stringify(productsData))
+          localStorage.setItem('hero_cache_time', now.toString())
         }
       } catch (error) {
         console.error('Error fetching data:', error)
@@ -219,11 +244,21 @@ const Hero = () => {
               </div>
 
               {loading ? (
-                <div className="text-center text-slate-400 py-8">Loading blogs...</div>
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="bg-white/10 backdrop-blur-md border border-purple-500/20 rounded-2xl overflow-hidden">
+                      <div className="h-48 bg-slate-200 dark:bg-slate-700 animate-pulse" />
+                      <div className="p-2 sm:p-5">
+                        <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mb-2" />
+                        <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mb-2" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : !Array.isArray(blogs) || blogs.length === 0 ? (
                 <div className="text-center text-slate-400 py-8">No blogs found</div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
                   {(blogs || []).slice(blogIndex, blogIndex + 3).map((blog) => (
                     <Link key={blog.id} to={`/blog/${blog.id}`} className="block">
                       <div className="bg-white/10 backdrop-blur-md border border-purple-500/20 rounded-2xl overflow-hidden shadow-xl hover:scale-105 transition-all duration-300 h-full">
@@ -234,11 +269,11 @@ const Hero = () => {
                             <span className="text-4xl">📝</span>
                           </div>
                         )}
-                        <div className="p-5">
-                          <span className="text-xs font-semibold px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full">{blog.category || 'Blog'}</span>
-                          <h3 className="text-lg font-bold text-white mt-2 mb-2 line-clamp-1">{getLocalizedText(blog.title)}</h3>
-                          <p className="text-sm text-slate-300 mb-3 line-clamp-2">{getLocalizedText(blog.excerpt || blog.description) || 'No description'}</p>
-                          <div className="flex items-center justify-between text-xs text-slate-400">
+                        <div className="p-2 sm:p-5">
+                          <span className="text-[10px] sm:text-xs font-semibold px-2 sm:px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full">{blog.category || 'Blog'}</span>
+                          <h3 className="text-xs sm:text-lg font-bold text-white mt-2 mb-2 line-clamp-1">{getLocalizedText(blog.title)}</h3>
+                          <p className="text-[10px] sm:text-sm text-slate-300 mb-2 sm:mb-3 line-clamp-2">{getLocalizedText(blog.excerpt || blog.description) || 'No description'}</p>
+                          <div className="flex items-center justify-between text-[10px] sm:text-xs text-slate-400">
                             <span>{blog.created_at ? new Date(blog.created_at).toLocaleDateString() : ''}</span>
                             <span className="font-semibold text-purple-400 flex items-center">Read More →</span>
                           </div>
@@ -273,32 +308,40 @@ const Hero = () => {
               </div>
 
               {loading ? (
-                <div className="text-center text-slate-400 py-8">Loading products...</div>
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="bg-white/10 border border-purple-500/20 rounded-2xl p-4">
+                      <div className="h-28 sm:h-36 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse mb-2" />
+                      <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mb-2" />
+                      <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded animate-pulse w-2/3" />
+                    </div>
+                  ))}
+                </div>
               ) : !Array.isArray(products) || products.length === 0 ? (
                 <div className="text-center text-slate-400 py-8">No products found</div>
               ) : (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                   {(products || []).slice(prodIndex, prodIndex + 4).map((product) => (
                     <Link key={product.id} to="/categories" className="block">
                       <div className="bg-white/10 border border-purple-500/20 hover:border-purple-400/50 rounded-2xl p-4 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-purple-500/10 group relative">
                         <span className="absolute top-3 right-3 bg-purple-500 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-full z-10 uppercase">Featured</span>
-                        <div className="h-36 bg-gradient-to-b from-purple-900/80 to-indigo-800/50 rounded-xl flex items-center justify-center p-3 mb-3 overflow-hidden group-hover:scale-105 transition-transform duration-300">
+                        <div className="h-28 sm:h-36 bg-gradient-to-b from-purple-900/80 to-indigo-800/50 rounded-xl flex items-center justify-center p-2 sm:p-3 mb-2 sm:mb-3 overflow-hidden group-hover:scale-105 transition-transform duration-300">
                           {product.image_url ? (
                             <img src={product.image_url} alt={getLocalizedText(product.name) || getLocalizedText(product.title)} className="max-h-full object-contain" />
                           ) : (
-                            <span className="text-5xl">🛍️</span>
+                            <span className="text-3xl sm:text-5xl">🛍️</span>
                           )}
                         </div>
-                        <h3 className="text-sm font-bold text-white truncate mb-2">{getLocalizedText(product.name) || getLocalizedText(product.title)}</h3>
-                        <div className="flex items-center justify-center mb-2">
-                          <Star className="h-3 w-3 text-purple-300 fill-current" />
-                          <Star className="h-3 w-3 text-purple-300 fill-current" />
-                          <Star className="h-3 w-3 text-purple-300 fill-current" />
-                          <Star className="h-3 w-3 text-purple-300 fill-current" />
-                          <Star className="h-3 w-3 text-purple-300 fill-current" />
+                        <h3 className="text-[10px] sm:text-sm font-bold text-white truncate mb-2">{getLocalizedText(product.name) || getLocalizedText(product.title)}</h3>
+                        <div className="flex items-center justify-center mb-1 sm:mb-2">
+                          <Star className="h-2 w-2 sm:h-3 sm:w-3 text-purple-300 fill-current" />
+                          <Star className="h-2 w-2 sm:h-3 sm:w-3 text-purple-300 fill-current" />
+                          <Star className="h-2 w-2 sm:h-3 sm:w-3 text-purple-300 fill-current" />
+                          <Star className="h-2 w-2 sm:h-3 sm:w-3 text-purple-300 fill-current" />
+                          <Star className="h-2 w-2 sm:h-3 sm:w-3 text-purple-300 fill-current" />
                         </div>
-                        <p className="text-purple-300 text-lg font-black mb-3">₹{product.price}</p>
-                        <div className="bg-gradient-to-r from-purple-400 to-indigo-500 text-white font-extrabold text-xs py-2 px-3 rounded-xl shadow-lg hover:brightness-110 flex items-center justify-center gap-1 w-full transition">
+                        <p className="text-purple-300 text-sm sm:text-lg font-black mb-2 sm:mb-3">₹{product.price}</p>
+                        <div className="bg-gradient-to-r from-purple-400 to-indigo-500 text-white font-extrabold text-[10px] sm:text-xs py-1.5 sm:py-2 px-2 sm:px-3 rounded-xl shadow-lg hover:brightness-110 flex items-center justify-center gap-1 w-full transition">
                           Buy Now 🛒
                         </div>
                       </div>

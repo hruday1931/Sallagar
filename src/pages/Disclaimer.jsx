@@ -4,10 +4,10 @@ import { AlertTriangle, ShoppingBag, Info, ExternalLink } from 'lucide-react'
 const Disclaimer = () => {
   return (
     <div className="min-h-screen">
-      <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-teal-600 to-indigo-600 text-white py-20">
+      <div className="relative overflow-hidden bg-gradient-to-r from-purple-900/90 via-indigo-900/80 to-purple-950/90 text-white py-20">
         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 animate-pulse-glow"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 animate-pulse-glow"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 animate-pulse-glow"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 animate-pulse-glow"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center mb-4">
             <AlertTriangle className="h-10 w-10 mr-4" />
@@ -30,9 +30,9 @@ const Disclaimer = () => {
             </p>
           </div>
 
-          <div className="glassmorphism rounded-3xl shadow-xl p-8 mb-8 border-2 border-emerald-200">
+          <div className="glassmorphism rounded-3xl shadow-xl p-8 mb-8 border-2 border-purple-200">
             <div className="flex items-center mb-4">
-              <ShoppingBag className="h-6 w-6 text-emerald-600 mr-3" />
+              <ShoppingBag className="h-6 w-6 text-purple-600 mr-3" />
               <h2 className="text-2xl font-bold text-slate-900">Affiliate Disclosure</h2>
             </div>
             <p className="text-slate-600 mb-4 leading-relaxed font-semibold">
@@ -55,7 +55,7 @@ const Disclaimer = () => {
 
           <div className="glassmorphism rounded-3xl shadow-xl p-8 mb-8">
             <div className="flex items-center mb-4">
-              <Info className="h-6 w-6 text-emerald-600 mr-3" />
+              <Info className="h-6 w-6 text-purple-600 mr-3" />
               <h2 className="text-2xl font-bold text-slate-900">Educational & Informational Purpose Only</h2>
             </div>
             <p className="text-slate-600 mb-4 leading-relaxed">
@@ -84,7 +84,7 @@ const Disclaimer = () => {
 
           <div className="glassmorphism rounded-3xl shadow-xl p-8 mb-8">
             <div className="flex items-center mb-4">
-              <ExternalLink className="h-6 w-6 text-emerald-600 mr-3" />
+              <ExternalLink className="h-6 w-6 text-purple-600 mr-3" />
               <h2 className="text-2xl font-bold text-slate-900">Third-Party Websites</h2>
             </div>
             <p className="text-slate-600 mb-4 leading-relaxed">

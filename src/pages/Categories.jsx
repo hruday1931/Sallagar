@@ -24,9 +24,21 @@ const Categories = () => {
   const categories = ['All', 'Electronics', 'Home & Kitchen', 'Fashion', 'Health & Wellness', 'Sports & Outdoors']
   const storeOptions = ['Amazon', 'Flipkart', 'Meesho', 'Myntra', 'AJIO']
 
-  // Fetch all products from Supabase once on mount
+  // Fetch all products from Supabase once on mount with caching
   useEffect(() => {
     const fetchProducts = async () => {
+      // Check cache first
+      const cachedProducts = localStorage.getItem('cached_products')
+      const cacheTime = localStorage.getItem('products_cache_time')
+      const now = Date.now()
+      const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+      
+      if (cachedProducts && cacheTime && (now - parseInt(cacheTime)) < CACHE_DURATION) {
+        setAllProducts(JSON.parse(cachedProducts))
+        setLoading(false)
+        return
+      }
+      
       try {
         setLoading(true)
         const { data, error } = await supabase
@@ -37,7 +49,12 @@ const Categories = () => {
         if (error) {
           console.error('Error fetching products:', error)
         } else {
-          setAllProducts(data || [])
+          const productsData = data || []
+          setAllProducts(productsData)
+          
+          // Cache the results
+          localStorage.setItem('cached_products', JSON.stringify(productsData))
+          localStorage.setItem('products_cache_time', now.toString())
         }
       } catch (err) {
         console.error('Error fetching products:', err)
@@ -556,17 +573,25 @@ const Categories = () => {
           ))}
         </div>
 
-        {/* Loading State */}
+        {/* Skeleton Loader */}
         {loading && (
-          <div className="text-center py-20">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
-            <p className="text-slate-600 mt-4 font-medium">Loading products...</p>
+          <div className="mt-4 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="bg-purple-950/40 border border-purple-500/20 rounded-3xl shadow-md overflow-hidden">
+                <div className="h-56 bg-slate-200 dark:bg-slate-700 animate-pulse" />
+                <div className="p-2 sm:p-5 dark:bg-slate-800">
+                  <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mb-2" />
+                  <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mb-2" />
+                  <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded animate-pulse w-2/3" />
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
         {/* Products Grid */}
         {!loading && (
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="mt-4 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
             {filteredProducts?.map((product) => (
             <div 
               key={product.id}
@@ -616,12 +641,12 @@ const Categories = () => {
                 )}
               </div>
               
-              <div className="p-5 dark:bg-slate-800">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2 line-clamp-2">
+              <div className="p-2 sm:p-5 dark:bg-slate-800">
+                <h3 className="text-xs sm:text-lg font-bold text-slate-900 dark:text-slate-100 mb-2 line-clamp-2">
                   {product.title}
                 </h3>
                 
-                <p className="text-slate-600 dark:text-slate-300 text-sm mb-3 line-clamp-2">
+                <p className="text-[10px] sm:text-sm text-slate-600 dark:text-slate-300 mb-2 sm:mb-3 line-clamp-2">
                   {product.description}
                 </p>
                 
@@ -636,10 +661,10 @@ const Categories = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className={`w-full text-white py-3 px-4 rounded-2xl font-semibold flex items-center justify-center transition-all duration-500 ease-out hover:-translate-y-1 hover:scale-105 ${getStoreButtonStyle(product.store).bgClass}`}
+                  className={`w-full text-white py-1.5 sm:py-3 px-2 sm:px-4 rounded-2xl text-[10px] sm:text-sm font-semibold flex items-center justify-center transition-all duration-500 ease-out hover:-translate-y-1 hover:scale-105 ${getStoreButtonStyle(product.store).bgClass}`}
                 >
                   {getStoreButtonStyle(product.store).buttonText}
-                  <ExternalLink className="ml-2 h-4 w-4" />
+                  <ExternalLink className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
                 </a>
               </div>
             </div>
