@@ -247,7 +247,7 @@ const Hero = () => {
               </div>
 
               {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 min-h-[200px]">
+                <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2 sm:gap-4 min-h-[200px]">
                   {[...Array(3)].map((_, i) => (
                     <div key={i} className="bg-white/10 border border-purple-500/20 rounded-2xl p-2 sm:p-4">
                       <div className="h-20 sm:h-36 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse mb-2" />
@@ -259,7 +259,7 @@ const Hero = () => {
               ) : !Array.isArray(products) || products.length === 0 ? (
                 <div className="text-center text-slate-400 py-8">No products found</div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 min-h-[200px]">
+                <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2 sm:gap-4 min-h-[200px]">
                   {(products || []).slice(prodIndex, prodIndex + 3).map((product) => (
                     <Link key={product.id} to="/categories" className="block">
                       <div className="bg-white/10 border border-purple-500/20 hover:border-purple-400/50 rounded-2xl p-2 sm:p-4 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-purple-500/10 group relative">
