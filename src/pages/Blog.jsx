@@ -796,7 +796,7 @@ const Blog = () => {
 
         {/* Skeleton Loader */}
         {loading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-6 mt-4">
+          <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-6 mt-4">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="glassmorphism dark:bg-slate-800 rounded-3xl shadow-md overflow-hidden">
                 <div className="h-24 sm:h-56 bg-slate-200 dark:bg-slate-700 animate-pulse" />
@@ -1296,7 +1296,7 @@ const Blog = () => {
         )}
 
         {!loading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-6 mt-4">
+          <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-6 mt-4">
             {filteredBlogs?.map((post) => {
               const postLang = post.language || 'en';
               return (
