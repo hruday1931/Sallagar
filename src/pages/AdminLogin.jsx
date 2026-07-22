@@ -25,7 +25,7 @@ const AdminLogin = () => {
         if (password === data.admin_password) {
           localStorage.setItem('is_admin', 'true');
           alert("Login Successful! 🔓");
-          window.location.href = '/blog';
+          navigate('/blog');
         } else {
           setError("Invalid password. Please try again.");
           setPassword('');
