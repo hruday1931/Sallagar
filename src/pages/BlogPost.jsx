@@ -261,33 +261,29 @@ const BlogPost = () => {
         </>
       )}
       
-      {/* Header Image */}
-      <div className="relative min-h-[320px] max-h-[480px] w-full">
-        <img 
-          src={getImageUrl(post)}
-          alt={getLocalizedText(post.title, postLang)}
-          className="w-full h-full object-cover object-center"
-          onError={(e) => {
-            e.target.src = 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800';
-          }}
-        />
-        <div className={`absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent`} />
-        <div className="absolute bottom-0 left-0 right-0 p-8">
-          <div className="max-w-4xl mx-auto">
-            <Link 
-              to="/blog"
-              className={`inline-flex items-center ${isDarkMode ? 'text-white hover:text-purple-300' : 'text-white hover:text-purple-200'} transition-colors mb-4 hover:translate-x-1`}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Blog
-            </Link>
-            <span className="bg-gradient-to-r from-purple-400 to-purple-600 text-white px-3 py-1 rounded-full text-sm font-semibold inline-block mb-4">
-              {post.category}
-            </span>
-            <h1 className={`text-3xl sm:text-4xl lg:text-5xl font-bold ${isDarkMode ? 'text-white' : 'text-white'} mb-4 drop-shadow-lg`}>
-              {getLocalizedText(post.title, postLang)}
-            </h1>
-          </div>
+      {/* Header with Gradient Background */}
+      <div className={`relative min-h-[280px] w-full ${isDarkMode ? 'bg-gradient-to-br from-purple-900/50 via-indigo-900/50 to-slate-900/50' : 'bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-800'}`}>
+        {/* Premium Ambient Light Leaks */}
+        {isDarkMode && (
+          <>
+            <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 animate-pulse"></div>
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 animate-pulse" style={{animationDelay: '1s'}}></div>
+          </>
+        )}
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <Link 
+            to="/blog"
+            className={`inline-flex items-center ${isDarkMode ? 'text-white hover:text-purple-300' : 'text-white hover:text-purple-200'} transition-colors mb-6 hover:translate-x-1`}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Blog
+          </Link>
+          <span className="bg-gradient-to-r from-purple-400 to-purple-600 text-white px-3 py-1 rounded-full text-sm font-semibold inline-block mb-4">
+            {post.category}
+          </span>
+          <h1 className={`text-3xl sm:text-4xl lg:text-5xl font-bold ${isDarkMode ? 'text-white' : 'text-white'} mb-4 drop-shadow-lg`}>
+            {getLocalizedText(post.title, postLang)}
+          </h1>
         </div>
       </div>
 
