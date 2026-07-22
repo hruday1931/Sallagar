@@ -428,7 +428,7 @@ const Categories = () => {
                     required
                     value={newProduct.title}
                     onChange={(e) => setNewProduct({...newProduct, title: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300 bg-white text-slate-900 placeholder-gray-400"
                     placeholder="Product title"
                   />
                 </div>
@@ -438,7 +438,7 @@ const Categories = () => {
                     type="file"
                     accept="image/*"
                     onChange={handleProductImageUpload}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300 bg-white text-slate-900 placeholder-gray-400"
                   />
                   {uploading && (
                     <p className="text-sm text-emerald-600 mt-2">Uploading image...</p>
@@ -462,7 +462,7 @@ const Categories = () => {
                     type="text"
                     value={newProduct.category}
                     onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300 bg-white text-slate-900 placeholder-gray-400"
                     placeholder="Enter or select category"
                     list="category-options"
                   />
@@ -478,7 +478,7 @@ const Categories = () => {
                     required
                     value={newProduct.store}
                     onChange={(e) => setNewProduct({...newProduct, store: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300 bg-white text-slate-900 placeholder-gray-400"
                   >
                     {storeOptions.map((store) => (
                       <option key={store} value={store}>{store}</option>
@@ -492,7 +492,7 @@ const Categories = () => {
                     required
                     value={newProduct.price}
                     onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300 bg-white text-slate-900 placeholder-gray-400"
                     placeholder="₹9,999"
                   />
                 </div>
@@ -503,7 +503,7 @@ const Categories = () => {
                     required
                     value={newProduct.affiliateLink}
                     onChange={(e) => setNewProduct({...newProduct, affiliateLink: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300 bg-white text-slate-900 placeholder-gray-400"
                     placeholder="https://amazon.in/dp/..."
                   />
                 </div>
@@ -515,7 +515,7 @@ const Categories = () => {
                     max="100"
                     value={newProduct.discount_percent}
                     onChange={(e) => setNewProduct({...newProduct, discount_percent: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300 bg-white text-slate-900 placeholder-gray-400"
                     placeholder="Discount % (e.g. 10)"
                   />
                 </div>
@@ -527,7 +527,7 @@ const Categories = () => {
                   value={newProduct.description}
                   onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
                   rows="3"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300 bg-white text-slate-900 placeholder-gray-400"
                   placeholder="Short product description"
                 />
               </div>
